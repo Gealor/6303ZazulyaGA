@@ -41,6 +41,7 @@ def handmade_grayscale(img: np.ndarray) -> np.ndarray:
     return gray
 
 @time_meter_decorator
+# TODO: сделать возможность применения свертки к оригинальному изображению с тремя каналами RGB
 def handmade_convolution(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     '''
     Применений свертки к изображению (размытие, резкость и т.д.)
@@ -138,7 +139,7 @@ def process_image(path: Path, name_original: str):
 
     log.info("Сравнение размытия Гаусса...")
     blur_handmade = handmade_gaussian_blur(gray_handmade)
-    blur_cv2 = opencv_filter2D(gray_handmade, KERNEL_GAUSSIAN)
+    blur_cv2 = opencv_filter2D(gray_cv2, KERNEL_GAUSSIAN / np.sum(KERNEL_GAUSSIAN))
     cv2.imwrite(path / "blur_handmade.jpg", blur_handmade)
     cv2.imwrite(path / "blur_opencv.jpg", blur_cv2)
 
