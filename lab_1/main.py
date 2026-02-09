@@ -53,14 +53,6 @@ def read_csv_file(file: Path = MET_OBJECTS_FILE) -> list[MetObject]:
     log.info("Файл прочитан успешно.")
     return result
 
-def save_images(file_to_url: dict[str, str], paintings_dir: Path):
-    '''
-    Скачивание изображений в заданную директорию paintings_dir.
-    '''
-    for key, elem in file_to_url.items():
-        SAVED_FILE = paintings_dir / key
-        download_files(SAVED_FILE, elem)
-
 
 def main():
     path = create_dir()
@@ -76,11 +68,8 @@ def main():
 
     # Получаю данные по http запросу
     image_object = make_request(random_painting.object_id)
-    # Скачиваю изображения
-    file_to_url = {
-        ORIGINAL_IMAGE: image_object.primary_image,
-    }
-    save_images(file_to_url, paintings_dir=path)
+    # Скачиваю изображение
+    download_files(path=path / ORIGINAL_IMAGE, url=image_object.primary_image)
 
     process_image(path, name_original=ORIGINAL_IMAGE)
 

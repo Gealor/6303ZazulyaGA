@@ -27,9 +27,9 @@ def make_request(value: str, url: str = BASE_URL) -> ImageObject:
     return image_object
 
 
-def download_files(dir_image: Path, url: str):
-    log.info(f"Скачиваем файл с {url} в директорию {dir_image.as_posix()}...")
+def download_files(path: Path, url: str):
+    log.info(f"Скачиваем файл с {url} в директорию {path.as_posix()}...")
     response = requests.get(url)
-    with open(dir_image, mode="wb") as file:
+    with open(path, mode="wb") as file:
         file.write(response.content)
     log.info("Файл успешно скачан.")
