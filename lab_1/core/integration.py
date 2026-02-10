@@ -3,12 +3,10 @@ import requests
 
 from dataclass import ImageObject
 from logger import log
+import config
 
 
-BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1/objects/"
-
-
-def make_request(value: str, url: str = BASE_URL) -> ImageObject:
+def make_request(value: str, url: str = config.BASE_URL) -> ImageObject:
     INFO_URL = url + value
     log.info(f"Делаю запрос на {INFO_URL}...")
     response = requests.get(url=INFO_URL)

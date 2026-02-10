@@ -3,64 +3,27 @@ import os
 import random
 from pathlib import Path
 
-from image_processing import process_image
+from core.image_processing import process_image
+from core.files_processing import clear_folder, create_dir, read_csv_file
 from logger import log
 from dataclass import MetObject
-from integration import download_files, make_request
+from core.integration import download_files, make_request
+import config
 
 random.seed(52)
 
-DIR_NAME = "paintings"
-BASE_DIR = Path(__file__).parent
-
-MET_OBJECTS_FILE = BASE_DIR / "MetObjects.csv"
-PAINTING_CLASSIFICATION = "Paintings"
-
-ORIGINAL_IMAGE = "original.jpg"
-
-def create_dir(name: str = DIR_NAME) -> Path:
-    '''
-    Создание нужной директории с именем name
-    '''
-    painting_dir = BASE_DIR / name
-    if not os.path.exists(painting_dir):
-        log.info("Создание директории %s...", name)
-        os.makedirs(painting_dir)
-    else:
-        log.info("Директория уже создана. Пропускаем...")
-    
-    return painting_dir
-
-
-def read_csv_file(file: Path = MET_OBJECTS_FILE) -> list[MetObject]:
-    '''
-    Чтение .csv файла и получение всех объектов с их идентификаторами и классификациями(классами)
-    '''
-    result = []
-    log.info("Чтение .csv файла...")
-    with open(file, mode="r", encoding="utf-8-sig") as f: # sig, чтобы убрать \ufeff символ
-        try:
-            csv_reader = csv.DictReader(f)
-        except Exception as e:
-            log.error("Ошибка при чтении csv файла: %s", e)
-            raise e
-        for row in csv_reader:
-            obj = MetObject(
-                object_id=row["Object ID"],
-                classification=row["Classification"]
-            )
-            result.append(obj)
-    log.info("Файл прочитан успешно.")
-    return result
-
 
 def main():
+    clear_folder(config.BASE_DIR / config.PAINTINGS_DIR_NAME)
     path = create_dir()
     objects_from_csv = read_csv_file()
     
     # Фильтрация объектов, по классификации, чтобы это была картинка
     log.info("Фильтрация данных...")
-    objects_from_csv = [elem for elem in objects_from_csv if elem.classification==PAINTING_CLASSIFICATION]
+    objects_from_csv = [
+        elem for elem in objects_from_csv 
+        if elem.classification==config.PAINTING_CLASSIFICATION
+    ]
     # Выбираю случайный объект
     log.info("Выбор случайного элемента...")
     random_painting = random.choice(objects_from_csv)
@@ -69,9 +32,9 @@ def main():
     # Получаю данные по http запросу
     image_object = make_request(random_painting.object_id)
     # Скачиваю изображение
-    download_files(path=path / ORIGINAL_IMAGE, url=image_object.primary_image)
+    download_files(path=path / config.ORIGINAL_IMAGE, url=image_object.primary_image)
 
-    process_image(path, name_original=ORIGINAL_IMAGE)
+    process_image(path, name_original=config.ORIGINAL_IMAGE)
 
 if __name__ == "__main__":
     main()

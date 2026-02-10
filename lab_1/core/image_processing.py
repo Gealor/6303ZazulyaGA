@@ -4,16 +4,10 @@ import numpy as np
 
 from decorators import time_meter_decorator
 from logger import log
+import config
 
 
-KERNEL_GAUSSIAN = np.array([
-    [1,  4,  7,  4, 1],
-    [4, 16, 26, 16, 4],
-    [7, 26, 41, 26, 7],
-    [4, 16, 26, 16, 4],
-    [1,  4,  7,  4, 1]
-], dtype=np.float32)
-print(np.sum(KERNEL_GAUSSIAN))
+print(np.sum(config.KERNEL_GAUSSIAN))
 
 def load_image(path: Path) -> np.ndarray:
     img = cv2.imread(path)
@@ -70,7 +64,7 @@ def handmade_gaussian_blur(img: np.ndarray) -> np.ndarray:
     Сглаживание Гаусса
     '''
     # Ядро Гаусса 5x5 (аппроксимация)
-    kernel =  KERNEL_GAUSSIAN / np.sum(KERNEL_GAUSSIAN) # 273.0
+    kernel = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN) # 273.0
     return handmade_convolution(img, kernel)
 
 
@@ -139,7 +133,7 @@ def process_image(path: Path, name_original: str):
 
     log.info("Сравнение размытия Гаусса...")
     blur_handmade = handmade_gaussian_blur(gray_handmade)
-    blur_cv2 = opencv_filter2D(gray_cv2, KERNEL_GAUSSIAN / np.sum(KERNEL_GAUSSIAN))
+    blur_cv2 = opencv_filter2D(gray_cv2, config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN))
     cv2.imwrite(path / "blur_handmade.jpg", blur_handmade)
     cv2.imwrite(path / "blur_opencv.jpg", blur_cv2)
 
