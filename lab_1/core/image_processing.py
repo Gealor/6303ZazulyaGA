@@ -1,11 +1,10 @@
 from pathlib import Path
+
+import config
 import cv2
 import numpy as np
-
 from decorators import time_meter_decorator
 from logger import log
-import config
-
 
 print(np.sum(config.KERNEL_GAUSSIAN))
 

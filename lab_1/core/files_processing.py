@@ -1,7 +1,7 @@
 import csv
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import config
 from dataclass import MetObject

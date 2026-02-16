@@ -1,9 +1,9 @@
 from pathlib import Path
-import requests
 
+import config
+import requests
 from dataclass import ImageObject
 from logger import log
-import config
 
 
 def make_request(value: str, url: str = config.BASE_URL) -> ImageObject:

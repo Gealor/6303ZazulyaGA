@@ -1,10 +1,10 @@
 import random
 
-from core.image_processing import process_image
-from core.files_processing import clear_folder, create_dir, read_csv_file
-from logger import log
-from core.integration import download_files, make_request
 import config
+from core.files_processing import clear_folder, create_dir, read_csv_file
+from core.image_processing import process_image
+from core.integration import download_files, make_request
+from logger import log
 
 random.seed(52)
 

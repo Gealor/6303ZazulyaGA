@@ -1,5 +1,5 @@
-from typing import Callable
 import time
+from typing import Callable
 
 from logger import log
 
