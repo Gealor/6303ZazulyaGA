@@ -23,16 +23,10 @@ def handmade_grayscale(img: np.ndarray) -> np.ndarray:
     Перевод изображения к grayscale
     '''
     h, w, _ = img.shape
-    gray = np.zeros((h, w,), dtype=np.uint8)
 
-    for i in range(h):
-        for j in range(w):
-            gray[i, j] = int(
-                0.114*img[i, j, 0]
-                + 0.587*img[i, j, 1]
-                + 0.299*img[i, j, 2]
-            )
-    return gray
+    gray = 0.114 * img[:, :, 0] + 0.587 * img[:, :, 1] + 0.299 * img[:, :, 2]
+    
+    return gray.astype(np.uint8)
 
 @time_meter_decorator
 # TODO: сделать возможность применения свертки к оригинальному изображению с тремя каналами RGB
