@@ -217,3 +217,4 @@ __marimo__/
 
 # flake8 config
 .flake8
+ruff.toml
