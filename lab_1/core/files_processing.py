@@ -35,7 +35,9 @@ def read_csv_file(file: Path = config.MET_OBJECTS_FILE) -> list[MetObject]:
     result = []
     log.info("Чтение .csv файла...")
     with open(
-        file, mode="r", encoding="utf-8-sig",
+        file,
+        mode="r",
+        encoding="utf-8-sig",
     ) as f:  # sig, чтобы убрать \ufeff символ
         try:
             csv_reader = csv.DictReader(f)
@@ -45,7 +47,8 @@ def read_csv_file(file: Path = config.MET_OBJECTS_FILE) -> list[MetObject]:
 
         for row in csv_reader:
             obj = MetObject(
-                object_id=row["Object ID"], classification=row["Classification"],
+                object_id=row["Object ID"],
+                classification=row["Classification"],
             )
             result.append(obj)
 

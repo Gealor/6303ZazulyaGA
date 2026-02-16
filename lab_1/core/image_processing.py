@@ -144,7 +144,8 @@ def process_image(path: Path, name_original: str):
     log.info("Сравнение размытия Гаусса...")
     blur_handmade = handmade_gaussian_blur(img)
     blur_cv2 = opencv_filter2D(
-        img, config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN),
+        img,
+        config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN),
     )
     cv2.imwrite(path / "blur_handmade.jpg", blur_handmade)
     cv2.imwrite(path / "blur_opencv.jpg", blur_cv2)
