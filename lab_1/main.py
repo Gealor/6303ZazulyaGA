@@ -1,12 +1,8 @@
-import csv
-import os
 import random
-from pathlib import Path
 
 from core.image_processing import process_image
 from core.files_processing import clear_folder, create_dir, read_csv_file
 from logger import log
-from dataclass import MetObject
 from core.integration import download_files, make_request
 import config
 
@@ -17,12 +13,13 @@ def main():
     clear_folder(config.BASE_DIR / config.PAINTINGS_DIR_NAME)
     path = create_dir()
     objects_from_csv = read_csv_file()
-    
+
     # Фильтрация объектов, по классификации, чтобы это была картинка
     log.info("Фильтрация данных...")
     objects_from_csv = [
-        elem for elem in objects_from_csv 
-        if elem.classification==config.PAINTING_CLASSIFICATION
+        elem
+        for elem in objects_from_csv
+        if elem.classification == config.PAINTING_CLASSIFICATION
     ]
     # Выбираю случайный объект
     log.info("Выбор случайного элемента...")
@@ -35,6 +32,7 @@ def main():
     download_files(path=path / config.ORIGINAL_IMAGE, url=image_object.primary_image)
 
     process_image(path, name_original=config.ORIGINAL_IMAGE)
+
 
 if __name__ == "__main__":
     main()

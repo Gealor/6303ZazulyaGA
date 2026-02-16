@@ -17,10 +17,13 @@ BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1/objects/"
 
 
 # Image processing
-KERNEL_GAUSSIAN = np.array([
-    [1,  4,  7,  4, 1],
-    [4, 16, 26, 16, 4],
-    [7, 26, 41, 26, 7],
-    [4, 16, 26, 16, 4],
-    [1,  4,  7,  4, 1]
-], dtype=np.float32)
+KERNEL_GAUSSIAN = np.array(
+    [
+        [1, 4, 7, 4, 1],
+        [4, 16, 26, 16, 4],
+        [7, 26, 41, 26, 7],
+        [4, 16, 26, 16, 4],
+        [1, 4, 7, 4, 1],
+    ],
+    dtype=np.float32,
+)

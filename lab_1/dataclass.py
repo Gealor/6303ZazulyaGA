@@ -6,6 +6,7 @@ class MetObject:
     object_id: str
     classification: str
 
+
 @dataclass(slots=True)
 class ImageObject:
     object_id: str
