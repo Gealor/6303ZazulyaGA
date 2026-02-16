@@ -110,7 +110,9 @@ def opencv_grayscale(img: np.ndarray) -> np.ndarray:
 
 @time_meter_decorator
 def opencv_filter2D(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
-    return cv2.filter2D(img, -1, kernel)
+    # return cv2.filter2D(img, -1, kernel)
+    return cv2.GaussianBlur(img, (5,5), 0)
+
 
 
 @time_meter_decorator
