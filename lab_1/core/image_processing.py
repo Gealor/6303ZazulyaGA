@@ -40,19 +40,26 @@ def handmade_convolution(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     '''
     Применений свертки к изображению (размытие, резкость и т.д.)
     '''
-    h, w = img.shape
+    if len(img.shape)==3:
+        h, w, _ = img.shape
+        is_rgb = True
+    else:
+        h, w = img.shape
+        is_rgb = False
+    
     kh, kw = kernel.shape
-
     pad_h, pad_w = kh//2, kw//2
+    
+    padding_config = ((pad_h, pad_h), (pad_w, pad_w), (0, 0)) if is_rgb else ((pad_h, pad_h), (pad_w, pad_w))
 
     # добавляю рамку вокруг изображения
-    padded_img = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode="constant")
+    padded_img = np.pad(img, pad_width=padding_config, mode="constant")
     result = np.zeros_like(img, dtype=np.float32)
 
     # Итерация по ядру, т.к. это быстрее, чем перебирать ВСЕ пиксели изображения
     for i in range(kh):
         for j in range(kw):
-            region = padded_img[i:i+h, j:j+w]
+            region = padded_img[i:i+h, j:j+w, :] if is_rgb else padded_img[i:i+h, j:j+w]
             result += region * kernel[i, j]
     
     return np.clip(result, 0, 255).astype(dtype=np.uint8)
@@ -132,13 +139,13 @@ def process_image(path: Path, name_original: str):
     cv2.imwrite(path / "gray_opencv.jpg", gray_cv2)
 
     log.info("Сравнение размытия Гаусса...")
-    blur_handmade = handmade_gaussian_blur(gray_handmade)
-    blur_cv2 = opencv_filter2D(gray_cv2, config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN))
+    blur_handmade = handmade_gaussian_blur(img)
+    blur_cv2 = opencv_filter2D(img, config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN))
     cv2.imwrite(path / "blur_handmade.jpg", blur_handmade)
     cv2.imwrite(path / "blur_opencv.jpg", blur_cv2)
 
     log.info("Сравнение выделения границ...")
-    edges_handmade = handmade_sobel(gray_handmade)
+    edges_handmade = handmade_sobel(img)
     edges_canny = opencv_canny(img)
     cv2.imwrite(path / "edges_handmade_sobel.jpg", edges_handmade)
     cv2.imwrite(path / "edges_opencv_canny.jpg", edges_canny)
