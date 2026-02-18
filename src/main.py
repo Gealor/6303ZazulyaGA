@@ -15,7 +15,9 @@ def main():
     log.info("Начало подготовки данных...")
     saved_file_path, saved_file_dir = file_processor.start_pipeline()
 
+    # artwork = ArtworkGrayscale(path=saved_file_path)
     artwork = ArtworkColorful(path=saved_file_path)
+    log.info("Получено изображение: %s", artwork)
     image_processor = ImageProcessor(artwork=artwork, save_path=saved_file_dir)
     log.info("Начало обработки изображения...")
     image_processor.process_artwork()

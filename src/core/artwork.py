@@ -12,12 +12,12 @@ from logger import log
 
 
 class Artwork(ABC):
-    __slots__ = ('_path_file', '_img', '_metadata')
+    __slots__ = ('_path_file', '_img', '_name')
 
-    def __init__(self, path: Path, metadata: ImageObject | None = None):
+    def __init__(self, path: Path):
         self._path_file = path
         self._img = self._load_image(path)
-        self._metadata = metadata
+        self._name = path.name
 
     @property
     def image(self):
@@ -27,6 +27,9 @@ class Artwork(ABC):
     def path(self):
         return self._path_file
 
+    @property
+    def name(self):
+        return self._name
 
     def _load_image(self, path: Path) -> np.ndarray:
         _img = cv2.imread(path)
@@ -182,14 +185,14 @@ class Artwork(ABC):
 
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(path={self._path_file})"
+        return f"{self.__class__.__name__}(path={self._path_file}, name={self._name})"
 
 class ArtworkColorful(Artwork):
     # дублировать поля из родительского класса в slots не нужно
     __slots__ = ()
 
-    def __init__(self, path: Path, metadata: ImageObject | None = None):
-        super().__init__(path, metadata)
+    def __init__(self, path: Path):
+        super().__init__(path)
         if len(self._img.shape)!=3 or self._img.shape[2]!=3:
             log.error("Несоответствие количества каналов для цветного изображения")
             raise ShapeArtworkColorfulException
@@ -267,8 +270,8 @@ class ArtworkColorful(Artwork):
 class ArtworkGrayscale(Artwork):
     __slots__ = ()
 
-    def __init__(self, path: Path, metadata: ImageObject | None = None):
-        super().__init__(path, metadata)
+    def __init__(self, path: Path):
+        super().__init__(path)
         if len(self._img.shape) == 3:
             self._img = cv2.cvtColor(self._img, cv2.COLOR_RGB2GRAY).astype(dtype=np.uint8)
 
