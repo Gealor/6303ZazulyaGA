@@ -153,11 +153,11 @@ def handmade_histogram_equalization(img: np.ndarray) -> np.ndarray:
     else:
         lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
         # Разделение каналов
-        l, a, b = cv2.split(lab)
+        lightness, a, b = cv2.split(lab)
         # Выравнивание только L (Lightness) канала
-        lut = _calculate_cdf(l)
+        lut = _calculate_cdf(lightness)
 
-        l_eq = cv2.LUT(l, lut)
+        l_eq = cv2.LUT(lightness, lut)
         merged = cv2.merge((l_eq, a, b))
 
         return cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
