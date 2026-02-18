@@ -62,6 +62,7 @@ class Artwork(ABC):
 
 
     def save_image(self, img: np.ndarray, path: Path):
+        log.info("Сохранение изображения в %s...", path)
         cv2.imwrite(path, img)
 
 
@@ -274,6 +275,7 @@ class ArtworkGrayscale(Artwork):
         super().__init__(path)
         if len(self._img.shape) == 3:
             self._img = cv2.cvtColor(self._img, cv2.COLOR_RGB2GRAY).astype(dtype=np.uint8)
+        self.save_image(self._img, path=path)
 
     @time_meter_decorator
     def handmade_grayscale(self) -> np.ndarray:
