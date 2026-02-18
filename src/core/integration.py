@@ -1,7 +1,8 @@
 from pathlib import Path
 
-import config
 import requests
+
+import config
 from dataclass import ImageObject
 from logger import log
 
