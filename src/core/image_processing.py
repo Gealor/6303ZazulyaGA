@@ -94,7 +94,14 @@ def handmade_sobel(img: np.ndarray) -> np.ndarray:
         ],
         dtype=np.float32,
     )
-    ky = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
+    ky = np.array(
+        [
+            [-1, -2, -1],
+            [0, 0, 0],
+            [1, 2, 1]
+        ],
+        dtype=np.float32
+    )
 
     grad_x = handmade_convolution(img, kx).astype(np.float32)
     grad_y = handmade_convolution(img, ky).astype(np.float32)
@@ -164,6 +171,14 @@ def opencv_grayscale(img: np.ndarray) -> np.ndarray:
 
 
 @time_meter_decorator
+def opencv_filter2D(
+    img: np.ndarray,
+    kernel: np.ndarray = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)
+) -> np.ndarray:
+    return cv2.filter2D(img, -1, kernel)
+
+
+@time_meter_decorator
 def opencv_gaussian_blur(
     img: np.ndarray,
     kernel: np.ndarray = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)
@@ -175,18 +190,6 @@ def opencv_gaussian_blur(
 @time_meter_decorator
 def opencv_canny(img: np.ndarray) -> np.ndarray:
     return cv2.Canny(img, 100, 200)
-
-
-@time_meter_decorator
-def opencv_harris(img: np.ndarray) -> np.ndarray:
-    # Детектор углов Харриса
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    gray = gray.astype(dtype=np.float32)
-    dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-    # Результат Харриса — это карта откликов, применяется на картинку для визуализации
-    img_copy = img.copy()
-    img_copy[dst > 0.01 * dst.max()] = [0, 0, 255]
-    return img_copy
 
 
 @time_meter_decorator
