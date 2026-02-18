@@ -11,7 +11,7 @@ print(np.sum(config.KERNEL_GAUSSIAN))
 
 
 def load_image(path: Path) -> np.ndarray:
-    img = cv2.imread(path, )
+    img = cv2.imread(path)
     if img is None:
         log.error("Не удалось загрузить изображение")
         raise ValueError
