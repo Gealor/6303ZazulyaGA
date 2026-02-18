@@ -32,7 +32,6 @@ def handmade_grayscale(img: np.ndarray) -> np.ndarray:
 
 
 @time_meter_decorator
-# TODO: сделать возможность применения свертки к оригинальному изображению с тремя каналами RGB
 def handmade_convolution(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     """
     Применений свертки к изображению (размытие, резкость и т.д.)
@@ -142,9 +141,9 @@ def opencv_canny(img: np.ndarray) -> np.ndarray:
 def opencv_harris(img: np.ndarray) -> np.ndarray:
     # Детектор углов Харриса
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = np.float32(gray)
+    gray = gray.astype(dtype=np.float32)
     dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-    # Результат Харриса — это карта откликов, наложим её на картинку для визуализации
+    # Результат Харриса — это карта откликов, применяется на картинку для визуализации
     img_copy = img.copy()
     img_copy[dst > 0.01 * dst.max()] = [0, 0, 255]
     return img_copy
@@ -159,7 +158,7 @@ def opencv_gamma_correction(
     Гамма-коррекция через Look-Up Table (LUT) OpenCV.
     """
     inv_gamma = 1.0 / gamma
-    # Создаем таблицу соответствия: индекс -> значение
+    # Массив соответствия: индекс - старое значение пикселя -> новое значение пикселя
     table = np.array(
         [
             ((i / 255.0) ** inv_gamma) * 255
