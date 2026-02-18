@@ -223,12 +223,12 @@ class ArtworkColorful(Artwork):
 
         padding_config = ((pad_h, pad_h), (pad_w, pad_w), (0, 0))
 
-        padded__img = np.pad(self._img, pad_width=padding_config, mode="constant")
+        padded_img = np.pad(self._img, pad_width=padding_config, mode="constant")
         result = np.zeros_like(self._img, dtype=np.float32)
 
         for i in range(kh):
             for j in range(kw):
-                region = padded__img[i : i + h, j : j + w, :]
+                region = padded_img[i : i + h, j : j + w, :]
                 result += region * kernel[i, j]
 
         return np.clip(result, 0, 255).astype(dtype=np.uint8)
