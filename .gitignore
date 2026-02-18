@@ -215,6 +215,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# flake8 config
+# linters config
 .flake8
 ruff.toml
