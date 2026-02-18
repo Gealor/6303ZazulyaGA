@@ -28,3 +28,8 @@ KERNEL_GAUSSIAN = np.array(
     dtype=np.float32,
 )
 GAMMA_CORRECTION_PARAM = 0.5
+
+
+# Logger configuration
+FORMAT = "%(asctime)s | %(module)s | %(levelname)s | %(message)s"
+DATEFMT = "%Y-%m-%d %H-%M-%S"
