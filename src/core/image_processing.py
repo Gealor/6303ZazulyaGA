@@ -1,8 +1,9 @@
 from pathlib import Path
 
-import config
 import cv2
 import numpy as np
+
+import config
 from decorators import time_meter_decorator
 from logger import log
 
@@ -10,7 +11,7 @@ print(np.sum(config.KERNEL_GAUSSIAN))
 
 
 def load_image(path: Path) -> np.ndarray:
-    img = cv2.imread(path)
+    img = cv2.imread(path, )
     if img is None:
         log.error("Не удалось загрузить изображение")
         raise ValueError
@@ -101,6 +102,7 @@ def handmade_sobel(img: np.ndarray) -> np.ndarray:
     magnitude = np.sqrt(grad_x**2 + grad_y**2)
     return np.clip(magnitude, 0, 255).astype(np.uint8)
 
+
 @time_meter_decorator
 def handmade_gamma_correction(
     img: np.ndarray,
@@ -119,8 +121,46 @@ def handmade_gamma_correction(
 
 
 @time_meter_decorator
+def handmade_histogram_equalization(img: np.ndarray) -> np.ndarray:
+    """Ручное выравнивание гистограммы"""
+    def _calculate_cdf(img_channel: np.ndarray) -> np.ndarray:
+        """Вспомогательная функция для расчета нормализованной CDF"""
+        # гистограмму (сколько раз встречается каждое значение от 0 до 255)
+        hist, _ = np.histogram(img_channel.flatten(), bins=256, range=(0, 256))
+
+        # накопленная сумма (CDF)
+        cdf = hist.cumsum()
+
+        # маскирование нулей (чтобы минимум был не 0)
+        cdf_m = np.ma.masked_equal(cdf, 0)
+
+        # нормализация CDF по формуле выравнивания гистограммы
+        # (cdf - cdf_min) * 255 / (total_pixels - cdf_min)
+        cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
+
+        # возвращение нулей обратно в результирующую матрицу
+        cdf = np.ma.filled(cdf_m, 0).astype(dtype=np.uint8)
+        return cdf
+
+    if len(img.shape) == 2:
+        cdf = _calculate_cdf(img)
+        return cdf[img]
+    else:
+        lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+        # Разделение каналов
+        l, a, b = cv2.split(lab)
+        # Выравнивание только L (Lightness) канала
+        lut = _calculate_cdf(l)
+
+        l_eq = cv2.LUT(l, lut)
+        merged = cv2.merge((l_eq, a, b))
+
+        return cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
+
+
+@time_meter_decorator
 def opencv_grayscale(img: np.ndarray) -> np.ndarray:
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 
 @time_meter_decorator
@@ -140,7 +180,7 @@ def opencv_canny(img: np.ndarray) -> np.ndarray:
 @time_meter_decorator
 def opencv_harris(img: np.ndarray) -> np.ndarray:
     # Детектор углов Харриса
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     gray = gray.astype(dtype=np.float32)
     dst = cv2.cornerHarris(gray, 2, 3, 0.04)
     # Результат Харриса — это карта откликов, применяется на картинку для визуализации
@@ -170,6 +210,21 @@ def opencv_gamma_correction(
     return cv2.LUT(img, table)
 
 
+@time_meter_decorator
+def opencv_histogram_equalization(img: np.ndarray) -> np.ndarray:
+    """
+    Выравнивание гистограммы через opencv
+    """
+    if len(img.shape) == 2:
+        return cv2.equalizeHist(img)
+    else:
+        lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+        channels = cv2.split(lab)
+        cv2.equalizeHist(channels[0], channels[0])
+        merged = cv2.merge(channels)
+        return cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
+
+
 methods = {
     "grayscale": {
         "handmade": handmade_grayscale,
@@ -194,6 +249,12 @@ methods = {
         "opencv": opencv_gamma_correction,
         "handmade_path": "gamma_correction_handmade.jpg",
         "opencv_path": "gamma_correction_opencv.jpg",
+    },
+    "histogram equalization": {
+        "handmade": handmade_histogram_equalization,
+        "opencv": opencv_histogram_equalization,
+        "handmade_path": "histogram_equalization_handmade.jpg",
+        "opencv_path": "histogram_equalization_opencv.jpg",
     }
 }
 
