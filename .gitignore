@@ -218,3 +218,7 @@ __marimo__/
 # linters config
 .flake8
 ruff.toml
+
+# images
+*.jpg
+*.png
