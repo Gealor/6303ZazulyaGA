@@ -102,6 +102,22 @@ def handmade_sobel(img: np.ndarray) -> np.ndarray:
     magnitude = np.sqrt(grad_x**2 + grad_y**2)
     return np.clip(magnitude, 0, 255).astype(np.uint8)
 
+@time_meter_decorator
+def handmade_gamma_correction(
+    img: np.ndarray,
+    gamma: float = config.GAMMA_CORRECTION_PARAM,
+) -> np.ndarray:
+    """
+    Гамма-коррекция.
+    Если гамма > 1, то изображение становится темнее
+    Если гамма < 1, то изображение становится светлее
+    """
+    inv_gamma = 1.0 / gamma
+    img_float = img.astype(dtype=np.float32) / 255.0
+    corrected = np.power(img_float, inv_gamma)
+
+    return (corrected * 255).astype(dtype=np.uint8)
+
 
 @time_meter_decorator
 def opencv_grayscale(img: np.ndarray) -> np.ndarray:
@@ -109,10 +125,12 @@ def opencv_grayscale(img: np.ndarray) -> np.ndarray:
 
 
 @time_meter_decorator
-def opencv_filter2D(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
+def opencv_gaussian_blur(
+    img: np.ndarray,
+    kernel: np.ndarray = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)
+) -> np.ndarray:
     # return cv2.filter2D(img, -1, kernel)
     return cv2.GaussianBlur(img, (5,5), 0)
-
 
 
 @time_meter_decorator
@@ -132,29 +150,68 @@ def opencv_harris(img: np.ndarray) -> np.ndarray:
     return img_copy
 
 
+@time_meter_decorator
+def opencv_gamma_correction(
+    img: np.ndarray,
+    gamma: float = config.GAMMA_CORRECTION_PARAM,
+) -> np.ndarray:
+    """
+    Гамма-коррекция через Look-Up Table (LUT) OpenCV.
+    """
+    inv_gamma = 1.0 / gamma
+    # Создаем таблицу соответствия: индекс -> значение
+    table = np.array(
+        [
+            ((i / 255.0) ** inv_gamma) * 255
+            for i in np.arange(0, 256)
+        ]
+    ).astype(dtype=np.uint8)
+
+    # Применяем таблицу ко всему изображению
+    return cv2.LUT(img, table)
+
+
+methods = {
+    "grayscale": {
+        "handmade": handmade_grayscale,
+        "opencv": opencv_grayscale,
+        "handmade_path": "gray_handmade.jpg",
+        "opencv_path": "gray_opencv.jpg",
+    },
+    "gaussian blur": {
+        "handmade": handmade_gaussian_blur,
+        "opencv": opencv_gaussian_blur,
+        "handmade_path": "blur_handmade.jpg",
+        "opencv_path": "blur_opencv.jpg",
+    },
+    "edges": {
+        "handmade": handmade_sobel,
+        "opencv": opencv_canny,
+        "handmade_path": "edges_handmade_sobel.jpg",
+        "opencv_path": "edges_opencv_canny.jpg",
+    },
+    "gamma correction": {
+        "handmade": handmade_gamma_correction,
+        "opencv": opencv_gamma_correction,
+        "handmade_path": "gamma_correction_handmade.jpg",
+        "opencv_path": "gamma_correction_opencv.jpg",
+    }
+}
+
+def _apply_filter(name: str, img: np.ndarray, path: Path):
+    """Унифицированное применение фильтра и сохранение"""
+    log.info("Сравнение %s...", name)
+    handmade = methods[name]["handmade"](img)
+    opencv2 = methods[name]["opencv"](img)
+    cv2.imwrite(path / methods[name]["handmade_path"], handmade)
+    cv2.imwrite(path / methods[name]["opencv_path"], opencv2)
+
+
 def process_image(path: Path, name_original: str):
     original_path = path / name_original
     img = load_image(original_path)
 
-    log.info("Сравнение grayscale...")
-    gray_handmade = handmade_grayscale(img)
-    gray_cv2 = opencv_grayscale(img)
-    cv2.imwrite(path / "gray_handmade.jpg", gray_handmade)
-    cv2.imwrite(path / "gray_opencv.jpg", gray_cv2)
-
-    log.info("Сравнение размытия Гаусса...")
-    blur_handmade = handmade_gaussian_blur(img)
-    blur_cv2 = opencv_filter2D(
-        img,
-        config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN),
-    )
-    cv2.imwrite(path / "blur_handmade.jpg", blur_handmade)
-    cv2.imwrite(path / "blur_opencv.jpg", blur_cv2)
-
-    log.info("Сравнение выделения границ...")
-    edges_handmade = handmade_sobel(img)
-    edges_canny = opencv_canny(img)
-    cv2.imwrite(path / "edges_handmade_sobel.jpg", edges_handmade)
-    cv2.imwrite(path / "edges_opencv_canny.jpg", edges_canny)
+    for name in methods:
+        _apply_filter(name=name, img=img, path=path)
 
     log.info("Обработка завершена. Файлы сохранены в %s", path)

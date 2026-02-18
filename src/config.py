@@ -27,3 +27,4 @@ KERNEL_GAUSSIAN = np.array(
     ],
     dtype=np.float32,
 )
+GAMMA_CORRECTION_PARAM = 0.5
