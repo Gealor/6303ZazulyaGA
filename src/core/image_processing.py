@@ -7,8 +7,6 @@ import config
 from decorators import time_meter_decorator
 from logger import log
 
-print(np.sum(config.KERNEL_GAUSSIAN))
-
 
 def load_image(path: Path) -> np.ndarray:
     img = cv2.imread(path)
@@ -68,13 +66,34 @@ def handmade_convolution(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     return np.clip(result, 0, 255).astype(dtype=np.uint8)
 
 
+def create_gaussian_kernel(size: int, sigma: float | None = None, normalize: bool = True) -> np.ndarray:
+    """Создать ядро Гаусса размерности size на size"""
+    if size % 2==0:
+        raise ValueError("Размер ядра должен быть нечетным")
+
+    if sigma is None:
+        sigma = 0.3 * ((size - 1) * 0.5 - 1) + 0.8
+
+    center = size // 2
+    x = np.linspace(-center, center, size)
+    y = np.linspace(-center, center, size)
+    x, y = np.meshgrid(x, y)
+
+    kernel = np.exp(-(x**2 + y**2) / (2 * sigma**2))
+
+    if normalize:
+        kernel = kernel / np.sum(kernel)
+
+    return kernel
+
 @time_meter_decorator
-def handmade_gaussian_blur(img: np.ndarray) -> np.ndarray:
+def handmade_gaussian_blur(img: np.ndarray, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE) -> np.ndarray:
     """
     Сглаживание Гаусса
     """
-    # Ядро Гаусса 5x5 (аппроксимация)
-    kernel = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)  # 273.0
+    # Ядро Гаусса nxn (аппроксимация)
+    kernel = create_gaussian_kernel(kernel_size)
+
     return handmade_convolution(img, kernel)
 
 
@@ -179,10 +198,9 @@ def opencv_filter2D(
 @time_meter_decorator
 def opencv_gaussian_blur(
     img: np.ndarray,
-    kernel: np.ndarray = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)
+    kernel_size: int = config.KERNEL_GAUSSIAN_SIZE
 ) -> np.ndarray:
-    # return cv2.filter2D(img, -1, kernel)
-    return cv2.GaussianBlur(img, (5,5), 0)
+    return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
 
 
 @time_meter_decorator
