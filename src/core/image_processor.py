@@ -34,6 +34,7 @@ class ImageProcessor:
     def process_artwork(
         self,
         gamma_param: float = config.GAMMA_CORRECTION_PARAM,
+        kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
     ):
         tasks = {
             "grayscale": {
@@ -43,8 +44,8 @@ class ImageProcessor:
                 "opencv_path": "gray_opencv.jpg",
             },
             "gaussian blur": {
-                "handmade": self.artwork.handmade_gaussian_blur,
-                "opencv": self.artwork.opencv_gaussian_blur,
+                "handmade": lambda : self.artwork.handmade_gaussian_blur(kernel_size=kernel_size),
+                "opencv": lambda : self.artwork.opencv_gaussian_blur(kernel_size=kernel_size),
                 "handmade_path": "blur_handmade.jpg",
                 "opencv_path": "blur_opencv.jpg",
             },

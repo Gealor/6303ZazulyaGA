@@ -61,6 +61,27 @@ class Artwork(ABC):
         return cdf
 
 
+    def _create_gaussian_kernel(self, size: int, sigma: float | None = None, normalize: bool = True) -> np.ndarray:
+        """Создать ядро Гаусса размерности size на size"""
+        if size % 2==0:
+            raise ValueError("Размер ядра должен быть нечетным")
+
+        if sigma is None:
+            sigma = 0.3 * ((size - 1) * 0.5 - 1) + 0.8
+
+        center = size // 2
+        x = np.linspace(-center, center, size)
+        y = np.linspace(-center, center, size)
+        x, y = np.meshgrid(x, y)
+
+        kernel = np.exp(-(x**2 + y**2) / (2 * sigma**2))
+
+        if normalize:
+            kernel = kernel / np.sum(kernel)
+
+        return kernel
+
+
     def save_image(self, img: np.ndarray, path: Path):
         log.info("Сохранение изображения в %s...", path)
         cv2.imwrite(path, img)
@@ -92,12 +113,12 @@ class Artwork(ABC):
 
 
     @time_meter_decorator
-    def handmade_gaussian_blur(self) -> np.ndarray:
+    def handmade_gaussian_blur(self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE) -> np.ndarray:
         """
         Сглаживание Гаусса
         """
-        # Ядро Гаусса 5x5 (аппроксимация)
-        kernel = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)  # 273.0
+        # Ядро Гаусса nxn (аппроксимация)
+        kernel = self._create_gaussian_kernel(kernel_size)
         return self.handmade_convolution(kernel)
 
 
@@ -154,9 +175,9 @@ class Artwork(ABC):
 
 
     @time_meter_decorator
-    def opencv_gaussian_blur(self) -> np.ndarray:
+    def opencv_gaussian_blur(self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE) -> np.ndarray:
         # 0 значит, что степень размытия определяется ядром
-        return cv2.GaussianBlur(self._img, (5,5), 0)
+        return cv2.GaussianBlur(self._img, (kernel_size, kernel_size), 0)
 
 
     @time_meter_decorator
