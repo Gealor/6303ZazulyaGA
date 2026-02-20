@@ -49,7 +49,7 @@ class AbstractFileProcessor(ABC):
             log.info("Директория уже создана. Пропускаем...")
 
     def _get_and_download(
-        self, object_id: str, file_name: str = config.ORIGINAL_IMAGE
+        self, object_id: str, file_name: str = config.ORIGINAL_IMAGE,
     ) -> Path:
         extended_object = make_request(object_id)
         file_path = self.full_path / file_name
@@ -78,7 +78,7 @@ class AbstractFileProcessor(ABC):
 
         log.info("Запрос к стороннему API...")
         saved_file_path = self._get_and_download(
-            object_id=random_object.object_id, file_name=file_name
+            object_id=random_object.object_id, file_name=file_name,
         )
 
         return saved_file_path, saved_file_path.parent

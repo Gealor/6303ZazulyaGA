@@ -1,7 +1,4 @@
 from pathlib import Path
-from typing import Callable
-
-import numpy as np
 
 import config
 from core.artwork import Artwork
@@ -44,8 +41,12 @@ class ImageProcessor:
                 "opencv_path": "gray_opencv.jpg",
             },
             "gaussian blur": {
-                "handmade": lambda : self.artwork.handmade_gaussian_blur(kernel_size=kernel_size),
-                "opencv": lambda : self.artwork.opencv_gaussian_blur(kernel_size=kernel_size),
+                "handmade": lambda: self.artwork.handmade_gaussian_blur(
+                    kernel_size=kernel_size,
+                ),
+                "opencv": lambda: self.artwork.opencv_gaussian_blur(
+                    kernel_size=kernel_size,
+                ),
                 "handmade_path": "blur_handmade.jpg",
                 "opencv_path": "blur_opencv.jpg",
             },

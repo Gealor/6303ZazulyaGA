@@ -1,7 +1,6 @@
 import random
 
-import config
-from core.artwork import ArtworkColorful, ArtworkGrayscale
+from core.artwork import ArtworkColorful
 from core.files_processor import CSVFileProcessor
 from core.image_processor import ImageProcessor
 from logger import log

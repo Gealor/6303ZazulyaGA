@@ -6,13 +6,12 @@ import numpy as np
 
 import config
 from core.exceptions import ShapeArtworkColorfulException
-from dataclass import ImageObject
 from decorators import time_meter_decorator
 from logger import log
 
 
 class Artwork(ABC):
-    __slots__ = ('_path_file', '_img', '_name')
+    __slots__ = ("_path_file", "_img", "_name")
 
     def __init__(self, path: Path):
         self._path_file = path
@@ -40,7 +39,6 @@ class Artwork(ABC):
         log.info("Форма изображения: %s", _img.shape)
         return _img
 
-
     def _calculate_cdf(self, _img_channel: np.ndarray) -> np.ndarray:
         """Вспомогательная функция для расчета нормализованной CDF"""
         # гистограмма (сколько раз встречается каждое значение от 0 до 255)
@@ -60,16 +58,19 @@ class Artwork(ABC):
         cdf = np.ma.filled(cdf_m, 0).astype(dtype=np.uint8)
         return cdf
 
-
-    def _create_gaussian_kernel(self, size: int, sigma: float | None = None, normalize: bool = True) -> np.ndarray:
+    def _create_gaussian_kernel(
+        self, size: int, sigma: float | None = None, normalize: bool = True,
+    ) -> np.ndarray:
         """Создать ядро Гаусса размерности size на size"""
-        if size % 2==0:
+        if size % 2 == 0:
             raise ValueError("Размер ядра должен быть нечетным")
 
         if sigma is None:
             sigma = 0.3 * ((size - 1) * 0.5 - 1) + 0.8
 
         center = size // 2
+        # вектор, который показывается расстояние каждой ячейки от центра
+        # пример size = 5, [-2, -1, 0, 1, 2]
         x = np.linspace(-center, center, size)
         y = np.linspace(-center, center, size)
         x, y = np.meshgrid(x, y)
@@ -81,46 +82,40 @@ class Artwork(ABC):
 
         return kernel
 
-
     def save_image(self, img: np.ndarray, path: Path):
         log.info("Сохранение изображения в %s...", path)
         cv2.imwrite(path, img)
-
 
     @abstractmethod
     def handmade_grayscale(self) -> np.ndarray:
         pass
 
-
     @abstractmethod
     def handmade_convolution(self, kernel: np.ndarray) -> np.ndarray:
         pass
-
 
     @abstractmethod
     def handmade_histogram_equalization(self) -> np.ndarray:
         pass
 
-
     @abstractmethod
     def opencv_grayscale(self) -> np.ndarray:
         pass
-
 
     @abstractmethod
     def opencv_histogram_equalization(self) -> np.ndarray:
         pass
 
-
     @time_meter_decorator
-    def handmade_gaussian_blur(self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE) -> np.ndarray:
+    def handmade_gaussian_blur(
+        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
+    ) -> np.ndarray:
         """
         Сглаживание Гаусса
         """
         # Ядро Гаусса nxn (аппроксимация)
         kernel = self._create_gaussian_kernel(kernel_size)
         return self.handmade_convolution(kernel)
-
 
     @time_meter_decorator
     def handmade_highlight_borders(self) -> np.ndarray:
@@ -136,20 +131,13 @@ class Artwork(ABC):
             ],
             dtype=np.float32,
         )
-        ky = np.array(
-            [
-                [-1, -2, -1],
-                [0, 0, 0],
-                [1, 2, 1]
-            ], dtype=np.float32
-        )
+        ky = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
 
         grad_x = self.handmade_convolution(kx).astype(np.float32)
         grad_y = self.handmade_convolution(ky).astype(np.float32)
 
         magnitude = np.sqrt(grad_x**2 + grad_y**2)
         return np.clip(magnitude, 0, 255).astype(np.uint8)
-
 
     @time_meter_decorator
     def handmade_gamma_correction(self, gamma: float) -> np.ndarray:
@@ -164,26 +152,23 @@ class Artwork(ABC):
 
         return (corrected * 255).astype(dtype=np.uint8)
 
-
     @time_meter_decorator
     def opencv_filter2D(
-        self,
-        kernel: np.ndarray = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)
+        self, kernel: np.ndarray = config.KERNEL_GAUSSIAN,
     ) -> np.ndarray:
         # -1 значит, что глубина будет такой же, как и исходное изображение
         return cv2.filter2D(self._img, -1, kernel)
 
-
     @time_meter_decorator
-    def opencv_gaussian_blur(self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE) -> np.ndarray:
+    def opencv_gaussian_blur(
+        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
+    ) -> np.ndarray:
         # 0 значит, что степень размытия определяется ядром
         return cv2.GaussianBlur(self._img, (kernel_size, kernel_size), 0)
-
 
     @time_meter_decorator
     def opencv_highlight_borders(self) -> np.ndarray:
         return cv2.Canny(self._img, 100, 200)
-
 
     @time_meter_decorator
     def opencv_gamma_correction(
@@ -196,18 +181,15 @@ class Artwork(ABC):
         inv_gamma = 1.0 / gamma
         # Массив (таблица) соответствия: индекс - старое значение пикселя -> новое значение пикселя
         table = np.array(
-            [
-                ((i / 255.0) ** inv_gamma) * 255
-                for i in np.arange(0, 256)
-            ]
+            [((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)],
         ).astype(dtype=np.uint8)
 
         # Применяю таблицу ко всему изображению
         return cv2.LUT(self._img, table)
 
-
     def __repr__(self):
         return f"{self.__class__.__name__}(path={self._path_file}, name={self._name})"
+
 
 class ArtworkColorful(Artwork):
     # дублировать поля из родительского класса в slots не нужно
@@ -215,7 +197,7 @@ class ArtworkColorful(Artwork):
 
     def __init__(self, path: Path):
         super().__init__(path)
-        if len(self._img.shape)!=3 or self._img.shape[2]!=3:
+        if len(self._img.shape) != 3 or self._img.shape[2] != 3:
             log.error("Несоответствие количества каналов для цветного изображения")
             raise ShapeArtworkColorfulException
 
@@ -225,9 +207,9 @@ class ArtworkColorful(Artwork):
         Перевод цветного изображения к grayscale
         """
         gray = (
-            0.114 * self._img[:, :, 0] +
-            0.587 * self._img[:, :, 1] +
-            0.299 * self._img[:, :, 2]
+            0.114 * self._img[:, :, 0]
+            + 0.587 * self._img[:, :, 1]
+            + 0.299 * self._img[:, :, 2]
         )
 
         return gray.astype(np.uint8)
@@ -296,6 +278,7 @@ class ArtworkGrayscale(Artwork):
         super().__init__(path)
         if len(self._img.shape) == 3:
             self._img = cv2.cvtColor(self._img, cv2.COLOR_RGB2GRAY).astype(dtype=np.uint8)
+
         self.save_image(self._img, path=path)
 
     @time_meter_decorator
