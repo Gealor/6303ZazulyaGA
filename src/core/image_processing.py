@@ -66,9 +66,11 @@ def handmade_convolution(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     return np.clip(result, 0, 255).astype(dtype=np.uint8)
 
 
-def create_gaussian_kernel(size: int, sigma: float | None = None, normalize: bool = True) -> np.ndarray:
+def create_gaussian_kernel(
+    size: int, sigma: float | None = None, normalize: bool = True
+) -> np.ndarray:
     """Создать ядро Гаусса размерности size на size"""
-    if size % 2==0:
+    if size % 2 == 0:
         raise ValueError("Размер ядра должен быть нечетным")
 
     if sigma is None:
@@ -86,8 +88,11 @@ def create_gaussian_kernel(size: int, sigma: float | None = None, normalize: boo
 
     return kernel
 
+
 @time_meter_decorator
-def handmade_gaussian_blur(img: np.ndarray, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE) -> np.ndarray:
+def handmade_gaussian_blur(
+    img: np.ndarray, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE
+) -> np.ndarray:
     """
     Сглаживание Гаусса
     """
@@ -115,9 +120,9 @@ def handmade_sobel(img: np.ndarray) -> np.ndarray:
         [
             [-1, -2, -1],
             [0, 0, 0],
-            [1, 2, 1]
+            [1, 2, 1],
         ],
-        dtype=np.float32
+        dtype=np.float32,
     )
 
     grad_x = handmade_convolution(img, kx).astype(np.float32)
@@ -147,6 +152,7 @@ def handmade_gamma_correction(
 @time_meter_decorator
 def handmade_histogram_equalization(img: np.ndarray) -> np.ndarray:
     """Ручное выравнивание гистограммы"""
+
     def _calculate_cdf(img_channel: np.ndarray) -> np.ndarray:
         """Вспомогательная функция для расчета нормализованной CDF"""
         # гистограмму (сколько раз встречается каждое значение от 0 до 255)
@@ -190,7 +196,7 @@ def opencv_grayscale(img: np.ndarray) -> np.ndarray:
 @time_meter_decorator
 def opencv_filter2D(
     img: np.ndarray,
-    kernel: np.ndarray = config.KERNEL_GAUSSIAN / np.sum(config.KERNEL_GAUSSIAN)
+    kernel: np.ndarray = config.KERNEL_GAUSSIAN,
 ) -> np.ndarray:
     return cv2.filter2D(img, -1, kernel)
 
@@ -198,7 +204,7 @@ def opencv_filter2D(
 @time_meter_decorator
 def opencv_gaussian_blur(
     img: np.ndarray,
-    kernel_size: int = config.KERNEL_GAUSSIAN_SIZE
+    kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
 ) -> np.ndarray:
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
 
@@ -219,10 +225,7 @@ def opencv_gamma_correction(
     inv_gamma = 1.0 / gamma
     # Массив (таблица) соответствия: индекс - старое значение пикселя -> новое значение пикселя
     table = np.array(
-        [
-            ((i / 255.0) ** inv_gamma) * 255
-            for i in np.arange(0, 256)
-        ]
+        [((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)],
     ).astype(dtype=np.uint8)
 
     # Применяю таблицу ко всему изображению
@@ -274,8 +277,9 @@ methods = {
         "opencv": opencv_histogram_equalization,
         "handmade_path": "histogram_equalization_handmade.jpg",
         "opencv_path": "histogram_equalization_opencv.jpg",
-    }
+    },
 }
+
 
 def _apply_filter(name: str, img: np.ndarray, path: Path):
     """Унифицированное применение фильтра и сохранение"""

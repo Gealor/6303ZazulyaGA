@@ -6,6 +6,7 @@ from logger import log
 T = TypeVar("T")
 P = ParamSpec("P")
 
+
 def time_meter_decorator(func: Callable[P, T]) -> Callable[P, T]:
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         start = time.perf_counter()
