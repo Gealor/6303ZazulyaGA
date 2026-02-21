@@ -11,8 +11,6 @@ from core.integration import download_files, make_request
 from dataclass import BaseObject, MetObject
 from logger import log
 
-random.seed(52)
-
 
 class AbstractFileProcessor(ABC):
     __slots__ = ("save_folder", "base_dir")
