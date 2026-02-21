@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import requests
@@ -7,6 +8,20 @@ from dataclass import ImageObject
 from logger import log
 
 
+def _save_metadata_in_file(
+    data: dict,
+    path: Path = config.BASE_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
+) -> None:
+    log.info("Сохраняю метаданные в %s...", path.as_posix())
+    try:
+        with open(path, mode="w", encoding="utf-8") as file:
+            json.dump(data, file, indent=4)
+    except Exception:
+        log.warning("Произошла ошибка при сохранении метаданных.")
+    else:
+        log.info("Метаданные успешно сохранены.")
+
+
 def make_request(value: str, url: str = config.BASE_URL) -> ImageObject:
     info_url = url + value
     log.info(f"Делаю запрос на {info_url}...")
@@ -14,6 +29,7 @@ def make_request(value: str, url: str = config.BASE_URL) -> ImageObject:
     response.raise_for_status()
 
     data = response.json()
+    _save_metadata_in_file(data=data)
     try:
         image_object = ImageObject(
             object_id=data.get("objectID"),
