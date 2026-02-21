@@ -39,10 +39,10 @@ class Artwork(ABC):
         log.info("Форма изображения: %s", _img.shape)
         return _img
 
-    def _calculate_cdf(self, _img_channel: np.ndarray) -> np.ndarray:
+    def _calculate_cdf(self, img_channel: np.ndarray) -> np.ndarray:
         """Вспомогательная функция для расчета нормализованной CDF"""
         # гистограмма (сколько раз встречается каждое значение от 0 до 255)
-        hist, _ = np.histogram(_img_channel.flatten(), bins=256, range=(0, 256))
+        hist, _ = np.histogram(img_channel.flatten(), bins=256, range=(0, 256))
 
         # накопленная сумма (CDF)
         cdf = hist.cumsum()
@@ -91,37 +91,75 @@ class Artwork(ABC):
         pass
 
     @abstractmethod
-    def handmade_convolution(self, kernel: np.ndarray) -> np.ndarray:
+    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
         pass
 
     @abstractmethod
-    def handmade_histogram_equalization(self) -> np.ndarray:
+    def opencv_grayscale(self, img: np.ndarray | None = None) -> np.ndarray:
         pass
 
     @abstractmethod
-    def opencv_grayscale(self) -> np.ndarray:
+    def opencv_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
         pass
 
-    @abstractmethod
-    def opencv_histogram_equalization(self) -> np.ndarray:
-        pass
+    @time_meter_decorator
+    def handmade_convolution(self, kernel: np.ndarray, img: np.ndarray | None = None) -> np.ndarray:
+        """
+        Применений свертки к цветному изображению (размытие, резкость и т.д.)
+        """
+        if img is None:
+            img = self._img
+
+        len_shape = len(img.shape)
+        if len_shape == 3:
+            h, w, _ = img.shape
+        else:
+            h, w = img.shape
+
+        kh, kw = kernel.shape
+        pad_h, pad_w = kh // 2, kw // 2
+
+        padding_config = (
+            ((pad_h, pad_h), (pad_w, pad_w), (0, 0))
+            if len_shape == 3
+            else ((pad_h, pad_h), (pad_w, pad_w))
+        )
+
+        padded_img = np.pad(img, pad_width=padding_config, mode="constant")
+        result = np.zeros_like(img, dtype=np.float32)
+
+        for i in range(kh):
+            for j in range(kw):
+                region = (
+                    padded_img[i : i + h, j : j + w, :]
+                    if len_shape == 3
+                    else padded_img[i : i + h, j : j + w]
+                )
+                result += region * kernel[i, j]
+
+        return np.clip(result, 0, 255).astype(dtype=np.uint8)
 
     @time_meter_decorator
     def handmade_gaussian_blur(
-        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
+        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE, img: np.ndarray | None = None,
     ) -> np.ndarray:
-        """
-        Сглаживание Гаусса
-        """
+        """Сглаживание Гаусса"""
+        if img is None:
+            img = self._img
         # Ядро Гаусса nxn (аппроксимация)
         kernel = self._create_gaussian_kernel(kernel_size)
-        return self.handmade_convolution(kernel)
+        return self.handmade_convolution(kernel, img)
 
     @time_meter_decorator
-    def handmade_highlight_borders(self) -> np.ndarray:
+    def handmade_highlight_borders(self, img: np.ndarray | None = None) -> np.ndarray:
         """
         Выделение границ с помощью оператора Собеля
         """
+        if img is None:
+            img = self._img
+
+        img = self.handmade_grayscale()
+
         # Оператор Собеля для границ
         kx = np.array(
             [
@@ -133,21 +171,26 @@ class Artwork(ABC):
         )
         ky = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
 
-        grad_x = self.handmade_convolution(kx).astype(np.float32)
-        grad_y = self.handmade_convolution(ky).astype(np.float32)
+        grad_x = self.handmade_convolution(kx, img).astype(np.float32)
+        grad_y = self.handmade_convolution(ky, img).astype(np.float32)
 
         magnitude = np.sqrt(grad_x**2 + grad_y**2)
+        magnitude[magnitude > 128] = 255
+        magnitude[magnitude <= 128] = 0
         return np.clip(magnitude, 0, 255).astype(np.uint8)
 
     @time_meter_decorator
-    def handmade_gamma_correction(self, gamma: float) -> np.ndarray:
+    def handmade_gamma_correction(self, gamma: float, img: np.ndarray | None = None) -> np.ndarray:
         """
         Гамма-коррекция.
         Если гамма > 1, то изображение становится темнее
         Если гамма < 1, то изображение становится светлее
         """
+        if img is None:
+            img = self._img
+
         inv_gamma = 1.0 / gamma
-        _img_float = self._img.astype(dtype=np.float32) / 255.0
+        _img_float = img.astype(dtype=np.float32) / 255.0
         corrected = np.power(_img_float, inv_gamma)
 
         return (corrected * 255).astype(dtype=np.uint8)
@@ -206,39 +249,17 @@ class ArtworkColorful(Artwork):
         """
         Перевод цветного изображения к grayscale
         """
-        gray = (
-            0.114 * self._img[:, :, 0]
-            + 0.587 * self._img[:, :, 1]
-            + 0.299 * self._img[:, :, 2]
-        )
+        coef = np.array([0.114, 0.587, 0.299])
+        gray = np.sum(coef * self._img, axis=2)
 
         return gray.astype(np.uint8)
 
     @time_meter_decorator
-    def handmade_convolution(self, kernel: np.ndarray) -> np.ndarray:
-        """
-        Применений свертки к цветному изображению (размытие, резкость и т.д.)
-        """
-        h, w, _ = self._img.shape
+    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+        if img is None:
+            img = self._img
 
-        kh, kw = kernel.shape
-        pad_h, pad_w = kh // 2, kw // 2
-
-        padding_config = ((pad_h, pad_h), (pad_w, pad_w), (0, 0))
-
-        padded_img = np.pad(self._img, pad_width=padding_config, mode="constant")
-        result = np.zeros_like(self._img, dtype=np.float32)
-
-        for i in range(kh):
-            for j in range(kw):
-                region = padded_img[i : i + h, j : j + w, :]
-                result += region * kernel[i, j]
-
-        return np.clip(result, 0, 255).astype(dtype=np.uint8)
-
-    @time_meter_decorator
-    def handmade_histogram_equalization(self) -> np.ndarray:
-        lab = cv2.cvtColor(self._img, cv2.COLOR_RGB2LAB)
+        lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
         # Разделение каналов
         lightness, a, b = cv2.split(lab)
         # Выравнивание только L (Lightness) канала
@@ -286,31 +307,12 @@ class ArtworkGrayscale(Artwork):
         return self._img
 
     @time_meter_decorator
-    def handmade_convolution(self, kernel: np.ndarray) -> np.ndarray:
-        """
-        Применений свертки к цветному изображению (размытие, резкость и т.д.)
-        """
-        h, w = self._img.shape
+    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+        if img is None:
+            img = self._img
 
-        kh, kw = kernel.shape
-        pad_h, pad_w = kh // 2, kw // 2
-
-        padding_config = ((pad_h, pad_h), (pad_w, pad_w))
-
-        padded__img = np.pad(self._img, pad_width=padding_config, mode="constant")
-        result = np.zeros_like(self._img, dtype=np.float32)
-
-        for i in range(kh):
-            for j in range(kw):
-                region = padded__img[i : i + h, j : j + w]
-                result += region * kernel[i, j]
-
-        return np.clip(result, 0, 255).astype(dtype=np.uint8)
-
-    @time_meter_decorator
-    def handmade_histogram_equalization(self) -> np.ndarray:
-        cdf = self._calculate_cdf(self._img)
-        return cdf[self._img]
+        cdf = self._calculate_cdf(img)
+        return cdf[img]
 
     @time_meter_decorator
     def opencv_grayscale(self) -> np.ndarray:
