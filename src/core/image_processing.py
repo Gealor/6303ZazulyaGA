@@ -23,7 +23,9 @@ def handmade_grayscale(img: np.ndarray) -> np.ndarray:
     """
     Перевод изображения к grayscale
     """
-    gray = 0.114 * img[:, :, 0] + 0.587 * img[:, :, 1] + 0.299 * img[:, :, 2]
+    coef = np.array([0.114, 0.587, 0.299])
+    gray = np.sum(coef * img, axis = 2)
+    # gray = 0.114 * img[:, :, 0] + 0.587 * img[:, :, 1] + 0.299 * img[:, :, 2]
 
     return gray.astype(np.uint8)
 
@@ -107,6 +109,8 @@ def handmade_sobel(img: np.ndarray) -> np.ndarray:
     """
     Выделение границ с помощью оператора Собеля
     """
+    if len(img.shape) == 3:
+        img = handmade_grayscale(img)
     # Оператор Собеля для границ
     kx = np.array(
         [
@@ -129,7 +133,9 @@ def handmade_sobel(img: np.ndarray) -> np.ndarray:
     grad_y = handmade_convolution(img, ky).astype(np.float32)
 
     magnitude = np.sqrt(grad_x**2 + grad_y**2)
-    return np.clip(magnitude, 0, 255).astype(np.uint8)
+    magnitude[magnitude > 128] = 255
+    magnitude[magnitude <= 128] = 0
+    return magnitude.astype(np.uint8)
 
 
 @time_meter_decorator
