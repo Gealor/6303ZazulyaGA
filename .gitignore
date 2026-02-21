@@ -222,3 +222,6 @@ ruff.toml
 # images
 *.jpg
 *.png
+
+# files
+*.json
