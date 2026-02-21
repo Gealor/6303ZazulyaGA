@@ -214,3 +214,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# linters config
+.flake8
+ruff.toml
+
+# images
+*.jpg
+*.png
+
+# json files
+*.json
