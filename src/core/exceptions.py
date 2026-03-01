@@ -5,3 +5,7 @@ class BaseArtworkException(Exception):
 class ShapeArtworkColorfulException(BaseArtworkException):
     def __str__(self):
         return "Количество каналов не соответствует цветному изображению"
+
+
+class AddImagesException(BaseArtworkException):
+    pass

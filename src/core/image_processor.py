@@ -20,12 +20,12 @@ class ImageProcessor:
         handmade = options["handmade"]()
         opencv2 = options["opencv"]()
         self.artwork.save_image(
-            handmade,
             self.save_path / options["handmade_path"],
+            handmade,
         )
         self.artwork.save_image(
-            opencv2,
             self.save_path / options["opencv_path"],
+            opencv2,
         )
 
     def process_artwork(

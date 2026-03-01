@@ -1,22 +1,28 @@
+# чтобы можно было писать аннотации без кавычек, например, для указания типа класса внутри самого класса
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Self
 
 import cv2
 import numpy as np
 
 import config
-from core.exceptions import ShapeArtworkColorfulException
+from core.exceptions import (
+    AddImagesException,
+    ShapeArtworkColorfulException,
+)
 from decorators import time_meter_decorator
 from logger import log
 
 
 class Artwork(ABC):
-    __slots__ = ("_path_file", "_img", "_name")
+    __slots__ = ("_path_file", "_img",)
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, img: np.ndarray | None = None):
         self._path_file = path
-        self._img = self._load_image(path)
-        self._name = path.name
+        self._img = self._load_image(path) if img is None else img
 
     @property
     def image(self):
@@ -28,7 +34,7 @@ class Artwork(ABC):
 
     @property
     def name(self):
-        return self._name
+        return self._path_file.stem
 
     def _load_image(self, path: Path) -> np.ndarray:
         _img = cv2.imread(path)
@@ -39,7 +45,8 @@ class Artwork(ABC):
         log.info("Форма изображения: %s", _img.shape)
         return _img
 
-    def _calculate_cdf(self, img_channel: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def _calculate_cdf(img_channel: np.ndarray) -> np.ndarray:
         """Вспомогательная функция для расчета нормализованной CDF"""
         # гистограмма (сколько раз встречается каждое значение от 0 до 255)
         hist, _ = np.histogram(img_channel.flatten(), bins=256, range=(0, 256))
@@ -58,8 +65,9 @@ class Artwork(ABC):
         cdf = np.ma.filled(cdf_m, 0).astype(dtype=np.uint8)
         return cdf
 
+    @staticmethod
     def _create_gaussian_kernel(
-        self, size: int, sigma: float | None = None, normalize: bool = True,
+        size: int, sigma: float | None = None, normalize: bool = True,
     ) -> np.ndarray:
         """Создать ядро Гаусса размерности size на size"""
         if size % 2 == 0:
@@ -82,7 +90,10 @@ class Artwork(ABC):
 
         return kernel
 
-    def save_image(self, img: np.ndarray, path: Path):
+    def save_image(self, path: Path, img: np.ndarray | None = None):
+        if img is None:
+            img = self._img
+
         log.info("Сохранение изображения в %s...", path)
         cv2.imwrite(path, img)
 
@@ -197,7 +208,7 @@ class Artwork(ABC):
 
     @time_meter_decorator
     def opencv_filter2D(
-        self, kernel: np.ndarray = config.KERNEL_GAUSSIAN,
+        self, kernel: np.ndarray,
     ) -> np.ndarray:
         # -1 значит, что глубина будет такой же, как и исходное изображение
         return cv2.filter2D(self._img, -1, kernel)
@@ -231,15 +242,51 @@ class Artwork(ABC):
         return cv2.LUT(self._img, table)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(path={self._path_file}, name={self._name})"
+        return f"{self.__class__.__name__}(path={self._path_file})"
+
+    def __str__(self):
+        h, w = self._img.shape[:2]
+        c = self._img.shape[2] if self._img.ndim==3 else 1
+        return f"{self.__class__.__name__}(h={h}, w={w}, c={c})"
+
+    def __add__(self, other: Artwork | np.ndarray) -> Self:
+        if isinstance(other, Artwork):
+            other_img = other.image
+            other_name = other.path.stem
+        elif isinstance(other, np.ndarray):
+            other_img = other
+            other_name = "ndarray"
+        else:
+            return NotImplemented
+
+        if self._img.shape[:2] != other_img.shape[:2]:
+            log.error("Попытка сложить изображения разных размеров")
+            raise AddImagesException
+
+        img_self = self.image
+        ch_self = img_self.shape[2] if len(img_self.shape) == 3 else 1
+        ch_other = other_img.shape[2] if len(other_img.shape) == 3 else 1
+
+        if ch_self == 3 and ch_other == 1:
+            other_img = cv2.cvtColor(other_img, cv2.COLOR_GRAY2RGB)
+        elif ch_self == 1 and ch_other == 3:
+            img_self = cv2.cvtColor(img_self, cv2.COLOR_GRAY2RGB)
+
+        result = cv2.addWeighted(img_self, 1.0, other_img, config.COEF_ADDING, 0.0)
+
+        new_path = self.path.with_name(f"{self.path.stem}_plus_{other_name}{self.path.suffix}")
+        return self.__class__(
+            path=new_path,
+            img=result,
+        )
 
 
 class ArtworkColorful(Artwork):
     # дублировать поля из родительского класса в slots не нужно
     __slots__ = ()
 
-    def __init__(self, path: Path):
-        super().__init__(path)
+    def __init__(self, path: Path, img: np.ndarray | None = None):
+        super().__init__(path, img)
         if len(self._img.shape) != 3 or self._img.shape[2] != 3:
             log.error("Несоответствие количества каналов для цветного изображения")
             raise ShapeArtworkColorfulException
@@ -285,22 +332,14 @@ class ArtworkColorful(Artwork):
         merged = cv2.merge(channels)
         return cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
 
-    def __str__(self):
-        return (
-            f"{self.__class__.__name__}"
-            f"(h={self._img.shape[0]}, w={self._img.shape[1]}, c={self._img.shape[2]})"
-        )
-
 
 class ArtworkGrayscale(Artwork):
     __slots__ = ()
 
-    def __init__(self, path: Path):
-        super().__init__(path)
+    def __init__(self, path: Path, img: np.ndarray | None = None):
+        super().__init__(path, img)
         if len(self._img.shape) == 3:
             self._img = cv2.cvtColor(self._img, cv2.COLOR_RGB2GRAY).astype(dtype=np.uint8)
-
-        self.save_image(self._img, path=path)
 
     @time_meter_decorator
     def handmade_grayscale(self) -> np.ndarray:
@@ -321,9 +360,3 @@ class ArtworkGrayscale(Artwork):
     @time_meter_decorator
     def opencv_histogram_equalization(self) -> np.ndarray:
         return cv2.equalizeHist(self._img)
-
-    def __str__(self):
-        return (
-            f"{self.__class__.__name__}"
-            f"(h={self._img.shape[0]}, w={self._img.shape[1]}, c=1)"
-        )
