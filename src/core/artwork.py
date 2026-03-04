@@ -11,6 +11,7 @@ import numpy as np
 import config
 from core.exceptions import (
     AddImagesException,
+    ConstructorArtworkException,
     ShapeArtworkColorfulException,
 )
 from decorators import time_meter_decorator
@@ -20,9 +21,14 @@ from logger import log
 class Artwork(ABC):
     __slots__ = ("_path_file", "_img",)
 
-    def __init__(self, path: Path, img: np.ndarray | None = None):
+    def __init__(self, path: Path | None = None, img: np.ndarray | None = None):
         self._path_file = path
-        self._img = self._load_image(path) if img is None else img
+        if img is not None:
+            self._img = img
+        elif path is not None:
+            self._img = self._load_image(path)
+        else:
+            raise ConstructorArtworkException
 
     @property
     def image(self):
@@ -34,7 +40,7 @@ class Artwork(ABC):
 
     @property
     def name(self):
-        return self._path_file.stem
+        return self._path_file.stem if self._path_file else config.DEFAULT_IMAGE_NAME
 
     def _load_image(self, path: Path) -> np.ndarray:
         _img = cv2.imread(path)
@@ -252,10 +258,8 @@ class Artwork(ABC):
     def __add__(self, other: Artwork | np.ndarray) -> Self:
         if isinstance(other, Artwork):
             other_img = other.image
-            other_name = other.path.stem
         elif isinstance(other, np.ndarray):
             other_img = other
-            other_name = "ndarray"
         else:
             return NotImplemented
 
@@ -274,18 +278,14 @@ class Artwork(ABC):
 
         result = cv2.addWeighted(img_self, 1.0, other_img, config.COEF_ADDING, 0.0)
 
-        new_path = self.path.with_name(f"{self.path.stem}_plus_{other_name}{self.path.suffix}")
-        return self.__class__(
-            path=new_path,
-            img=result,
-        )
+        return self.__class__(img=result)
 
 
 class ArtworkColorful(Artwork):
     # дублировать поля из родительского класса в slots не нужно
     __slots__ = ()
 
-    def __init__(self, path: Path, img: np.ndarray | None = None):
+    def __init__(self, path: Path | None = None, img: np.ndarray | None = None):
         super().__init__(path, img)
         if len(self._img.shape) != 3 or self._img.shape[2] != 3:
             log.error("Несоответствие количества каналов для цветного изображения")
@@ -336,7 +336,7 @@ class ArtworkColorful(Artwork):
 class ArtworkGrayscale(Artwork):
     __slots__ = ()
 
-    def __init__(self, path: Path, img: np.ndarray | None = None):
+    def __init__(self, path: Path | None = None, img: np.ndarray | None = None):
         super().__init__(path, img)
         if len(self._img.shape) == 3:
             self._img = cv2.cvtColor(self._img, cv2.COLOR_RGB2GRAY).astype(dtype=np.uint8)

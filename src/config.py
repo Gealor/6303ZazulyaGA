@@ -26,3 +26,7 @@ COEF_ADDING = 0.3
 # Logger configuration
 FORMAT = "%(asctime)s | %(module)s | %(levelname)s | %(message)s"
 DATEFMT = "%Y-%m-%d %H-%M-%S"
+
+
+# Defaults
+DEFAULT_IMAGE_NAME = "image"
