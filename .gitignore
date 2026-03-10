@@ -223,5 +223,5 @@ ruff.toml
 *.jpg
 *.png
 
-# files
+# json files
 *.json
