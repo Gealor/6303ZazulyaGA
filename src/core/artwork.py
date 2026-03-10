@@ -1,0 +1,362 @@
+# чтобы можно было писать аннотации без кавычек, например, для указания типа класса внутри самого класса
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Self
+
+import cv2
+import numpy as np
+
+import config
+from core.exceptions import (
+    AddImagesException,
+    ConstructorArtworkException,
+    ShapeArtworkColorfulException,
+)
+from decorators import time_meter_decorator
+from logger import log
+
+
+class Artwork(ABC):
+    __slots__ = ("_path_file", "_img",)
+
+    def __init__(self, path: Path | None = None, img: np.ndarray | None = None):
+        self._path_file = path
+        if img is not None:
+            self._img = img
+        elif path is not None:
+            self._img = self._load_image(path)
+        else:
+            raise ConstructorArtworkException
+
+    @property
+    def image(self):
+        return self._img
+
+    @property
+    def path(self):
+        return self._path_file
+
+    @property
+    def name(self):
+        return self._path_file.stem if self._path_file else config.DEFAULT_IMAGE_NAME
+
+    def _load_image(self, path: Path) -> np.ndarray:
+        _img = cv2.imread(path)
+        if _img is None:
+            log.error("Не удалось загрузить изображение")
+            raise ValueError
+
+        log.info("Форма изображения: %s", _img.shape)
+        return _img
+
+    @staticmethod
+    def _calculate_cdf(img_channel: np.ndarray) -> np.ndarray:
+        """Вспомогательная функция для расчета нормализованной CDF"""
+        # гистограмма (сколько раз встречается каждое значение от 0 до 255)
+        hist, _ = np.histogram(img_channel.flatten(), bins=256, range=(0, 256))
+
+        # накопленная сумма (CDF)
+        cdf = hist.cumsum()
+
+        # маскирование нулей (чтобы минимум был не 0)
+        cdf_m = np.ma.masked_equal(cdf, 0)
+
+        # нормализация CDF по формуле выравнивания гистограммы
+        # (cdf - cdf_min) * 255 / (total_pixels - cdf_min)
+        cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
+
+        # возвращение нулей обратно в результирующую матрицу
+        cdf = np.ma.filled(cdf_m, 0).astype(dtype=np.uint8)
+        return cdf
+
+    @staticmethod
+    def _create_gaussian_kernel(
+        size: int, sigma: float | None = None, normalize: bool = True,
+    ) -> np.ndarray:
+        """Создать ядро Гаусса размерности size на size"""
+        if size % 2 == 0:
+            raise ValueError("Размер ядра должен быть нечетным")
+
+        if sigma is None:
+            sigma = 0.3 * ((size - 1) * 0.5 - 1) + 0.8
+
+        center = size // 2
+        # вектор, который показывается расстояние каждой ячейки от центра
+        # пример size = 5, [-2, -1, 0, 1, 2]
+        x = np.linspace(-center, center, size)
+        y = np.linspace(-center, center, size)
+        x, y = np.meshgrid(x, y)
+
+        kernel = np.exp(-(x**2 + y**2) / (2 * sigma**2))
+
+        if normalize:
+            kernel = kernel / np.sum(kernel)
+
+        return kernel
+
+    def save_image(self, path: Path, img: np.ndarray | None = None):
+        if img is None:
+            img = self._img
+
+        log.info("Сохранение изображения в %s...", path)
+        cv2.imwrite(path, img)
+
+    @abstractmethod
+    def handmade_grayscale(self) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def opencv_grayscale(self, img: np.ndarray | None = None) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def opencv_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+        pass
+
+    @time_meter_decorator
+    def handmade_convolution(self, kernel: np.ndarray, img: np.ndarray | None = None) -> np.ndarray:
+        """
+        Применений свертки к цветному изображению (размытие, резкость и т.д.)
+        """
+        if img is None:
+            img = self._img
+
+        len_shape = len(img.shape)
+        if len_shape == 3:
+            h, w, _ = img.shape
+        else:
+            h, w = img.shape
+
+        kh, kw = kernel.shape
+        pad_h, pad_w = kh // 2, kw // 2
+
+        padding_config = (
+            ((pad_h, pad_h), (pad_w, pad_w), (0, 0))
+            if len_shape == 3
+            else ((pad_h, pad_h), (pad_w, pad_w))
+        )
+
+        padded_img = np.pad(img, pad_width=padding_config, mode="constant")
+        result = np.zeros_like(img, dtype=np.float32)
+
+        for i in range(kh):
+            for j in range(kw):
+                region = (
+                    padded_img[i : i + h, j : j + w, :]
+                    if len_shape == 3
+                    else padded_img[i : i + h, j : j + w]
+                )
+                result += region * kernel[i, j]
+
+        return np.clip(result, 0, 255).astype(dtype=np.uint8)
+
+    @time_meter_decorator
+    def handmade_gaussian_blur(
+        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE, img: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Сглаживание Гаусса"""
+        if img is None:
+            img = self._img
+        # Ядро Гаусса nxn (аппроксимация)
+        kernel = self._create_gaussian_kernel(kernel_size)
+        return self.handmade_convolution(kernel, img)
+
+    @time_meter_decorator
+    def handmade_highlight_borders(self, img: np.ndarray | None = None) -> np.ndarray:
+        """
+        Выделение границ с помощью оператора Собеля
+        """
+        if img is None:
+            img = self._img
+
+        img = self.handmade_grayscale()
+
+        # Оператор Собеля для границ
+        kx = np.array(
+            [
+                [-1, 0, 1],
+                [-2, 0, 2],
+                [-1, 0, 1],
+            ],
+            dtype=np.float32,
+        )
+        ky = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
+
+        grad_x = self.handmade_convolution(kx, img).astype(np.float32)
+        grad_y = self.handmade_convolution(ky, img).astype(np.float32)
+
+        magnitude = np.sqrt(grad_x**2 + grad_y**2)
+        magnitude[magnitude > 128] = 255
+        magnitude[magnitude <= 128] = 0
+        return np.clip(magnitude, 0, 255).astype(np.uint8)
+
+    @time_meter_decorator
+    def handmade_gamma_correction(self, gamma: float, img: np.ndarray | None = None) -> np.ndarray:
+        """
+        Гамма-коррекция.
+        Если гамма > 1, то изображение становится темнее
+        Если гамма < 1, то изображение становится светлее
+        """
+        if img is None:
+            img = self._img
+
+        inv_gamma = 1.0 / gamma
+        _img_float = img.astype(dtype=np.float32) / 255.0
+        corrected = np.power(_img_float, inv_gamma)
+
+        return (corrected * 255).astype(dtype=np.uint8)
+
+    @time_meter_decorator
+    def opencv_filter2D(
+        self, kernel: np.ndarray,
+    ) -> np.ndarray:
+        # -1 значит, что глубина будет такой же, как и исходное изображение
+        return cv2.filter2D(self._img, -1, kernel)
+
+    @time_meter_decorator
+    def opencv_gaussian_blur(
+        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
+    ) -> np.ndarray:
+        # 0 значит, что степень размытия определяется ядром
+        return cv2.GaussianBlur(self._img, (kernel_size, kernel_size), 0)
+
+    @time_meter_decorator
+    def opencv_highlight_borders(self) -> np.ndarray:
+        return cv2.Canny(self._img, 100, 200)
+
+    @time_meter_decorator
+    def opencv_gamma_correction(
+        self,
+        gamma: float = config.GAMMA_CORRECTION_PARAM,
+    ) -> np.ndarray:
+        """
+        Гамма-коррекция через Look-Up Table (LUT) OpenCV.
+        """
+        inv_gamma = 1.0 / gamma
+        # Массив (таблица) соответствия: индекс - старое значение пикселя -> новое значение пикселя
+        table = np.array(
+            [((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)],
+        ).astype(dtype=np.uint8)
+
+        # Применяю таблицу ко всему изображению
+        return cv2.LUT(self._img, table)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(path={self._path_file})"
+
+    def __str__(self):
+        h, w = self._img.shape[:2]
+        c = self._img.shape[2] if self._img.ndim==3 else 1
+        return f"{self.__class__.__name__}(h={h}, w={w}, c={c})"
+
+    def __add__(self, other: Artwork | np.ndarray) -> Self:
+        if isinstance(other, Artwork):
+            other_img = other.image
+        elif isinstance(other, np.ndarray):
+            other_img = other
+        else:
+            return NotImplemented
+
+        if self._img.shape[:2] != other_img.shape[:2]:
+            log.error("Попытка сложить изображения разных размеров")
+            raise AddImagesException
+
+        img_self = self.image
+        ch_self = img_self.shape[2] if len(img_self.shape) == 3 else 1
+        ch_other = other_img.shape[2] if len(other_img.shape) == 3 else 1
+
+        if ch_self == 3 and ch_other == 1:
+            other_img = cv2.cvtColor(other_img, cv2.COLOR_GRAY2RGB)
+        elif ch_self == 1 and ch_other == 3:
+            img_self = cv2.cvtColor(img_self, cv2.COLOR_GRAY2RGB)
+
+        result = cv2.addWeighted(img_self, 1.0, other_img, config.COEF_ADDING, 0.0)
+
+        return self.__class__(img=result)
+
+
+class ArtworkColorful(Artwork):
+    # дублировать поля из родительского класса в slots не нужно
+    __slots__ = ()
+
+    def __init__(self, path: Path | None = None, img: np.ndarray | None = None):
+        super().__init__(path, img)
+        if len(self._img.shape) != 3 or self._img.shape[2] != 3:
+            log.error("Несоответствие количества каналов для цветного изображения")
+            raise ShapeArtworkColorfulException
+
+    @time_meter_decorator
+    def handmade_grayscale(self) -> np.ndarray:
+        """
+        Перевод цветного изображения к grayscale
+        """
+        coef = np.array([0.114, 0.587, 0.299])
+        gray = np.sum(coef * self._img, axis=2)
+
+        return gray.astype(np.uint8)
+
+    @time_meter_decorator
+    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+        if img is None:
+            img = self._img
+
+        lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+        # Разделение каналов
+        lightness, a, b = cv2.split(lab)
+        # Выравнивание только L (Lightness) канала
+        lut = self._calculate_cdf(lightness)
+
+        l_eq = cv2.LUT(lightness, lut)
+        merged = cv2.merge((l_eq, a, b))
+
+        return cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
+
+    @time_meter_decorator
+    def opencv_grayscale(self) -> np.ndarray:
+        return cv2.cvtColor(self._img, cv2.COLOR_RGB2GRAY)
+
+    @time_meter_decorator
+    def opencv_histogram_equalization(self) -> np.ndarray:
+        """
+        Выравнивание гистограммы через opencv
+        """
+        lab = cv2.cvtColor(self._img, cv2.COLOR_RGB2LAB)
+        channels = cv2.split(lab)
+        cv2.equalizeHist(channels[0], channels[0])
+        merged = cv2.merge(channels)
+        return cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
+
+
+class ArtworkGrayscale(Artwork):
+    __slots__ = ()
+
+    def __init__(self, path: Path | None = None, img: np.ndarray | None = None):
+        super().__init__(path, img)
+        if len(self._img.shape) == 3:
+            self._img = cv2.cvtColor(self._img, cv2.COLOR_RGB2GRAY).astype(dtype=np.uint8)
+
+    @time_meter_decorator
+    def handmade_grayscale(self) -> np.ndarray:
+        return self._img
+
+    @time_meter_decorator
+    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+        if img is None:
+            img = self._img
+
+        cdf = self._calculate_cdf(img)
+        return cdf[img]
+
+    @time_meter_decorator
+    def opencv_grayscale(self) -> np.ndarray:
+        return self._img
+
+    @time_meter_decorator
+    def opencv_histogram_equalization(self) -> np.ndarray:
+        return cv2.equalizeHist(self._img)

@@ -1,13 +1,17 @@
 from dataclasses import dataclass
 
 
-@dataclass(slots=True)
-class MetObject:
+@dataclass
+class BaseObject:
     object_id: str
+
+
+@dataclass(slots=True)
+class MetObject(BaseObject):
     classification: str
 
 
 @dataclass(slots=True)
-class ImageObject:
+class ImageObject(BaseObject):
     object_id: str
     primary_image: str

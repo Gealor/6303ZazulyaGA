@@ -18,15 +18,15 @@ BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1/objects/"
 
 
 # Image processing
-KERNEL_GAUSSIAN = np.array(
-    [
-        [1, 4, 7, 4, 1],
-        [4, 16, 26, 16, 4],
-        [7, 26, 41, 26, 7],
-        [4, 16, 26, 16, 4],
-        [1, 4, 7, 4, 1],
-    ],
-    dtype=np.float32,
-)
-KERNEL_GAUSSIAN_SIZE = 5
+KERNEL_GAUSSIAN_SIZE = 11
 GAMMA_CORRECTION_PARAM = 0.5
+COEF_ADDING = 0.3
+
+
+# Logger configuration
+FORMAT = "%(asctime)s | %(module)s | %(levelname)s | %(message)s"
+DATEFMT = "%Y-%m-%d %H-%M-%S"
+
+
+# Defaults
+DEFAULT_IMAGE_NAME = "image"

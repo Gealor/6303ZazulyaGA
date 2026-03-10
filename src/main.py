@@ -1,38 +1,44 @@
 import random
 
-import config
-from core.files_processing import clear_folder, create_dir, read_csv_file
-from core.image_processing import process_image
-from core.integration import download_files, make_request
+from core.artwork import ArtworkColorful, ArtworkGrayscale
+from core.files_processor import CSVFileProcessor
+from core.image_processor import ImageProcessor
 from logger import log
 
 random.seed(52)
 
 
 def main():
-    clear_folder(config.BASE_DIR / config.PAINTINGS_DIR_NAME)
-    path = create_dir()
-    objects_from_csv = read_csv_file()
+    file_processor = CSVFileProcessor()
 
-    # Фильтрация объектов, по классификации, чтобы это была картинка
-    log.info("Фильтрация данных...")
-    objects_from_csv = [
-        elem
-        for elem in objects_from_csv
-        if elem.classification == config.PAINTING_CLASSIFICATION
-    ]
-    # Выбираю случайный объект
-    log.info("Выбор случайного элемента...")
-    random_painting = random.choice(objects_from_csv)
-    log.info("Выбран объект с ID = %s", random_painting.object_id)
+    log.info("Начало подготовки данных...")
+    saved_file_path, saved_file_dir = file_processor.start_pipeline()
 
-    # Получаю данные по http запросу
-    image_object = make_request(random_painting.object_id)
-    # Скачиваю изображение
-    download_files(path=path / config.ORIGINAL_IMAGE, url=image_object.primary_image)
+    # artwork = ArtworkGrayscale(path=saved_file_path)
+    artwork = ArtworkColorful(path=saved_file_path)
+    log.info("Получено изображение: %s", artwork)
+    image_processor = ImageProcessor(artwork=artwork, save_path=saved_file_dir)
+    log.info("Начало обработки изображения...")
+    image_processor.process_artwork()
 
-    process_image(path, name_original=config.ORIGINAL_IMAGE)
+    artwork1 = ArtworkColorful(path=saved_file_path)
+    log.info("Тест сложения с выделенными границами...")
+    artwork2 = ArtworkGrayscale(img = artwork1.handmade_highlight_borders())
+    result = artwork1 + artwork2
+    result.save_image(path = saved_file_dir / "original_plus_highlight_borders.jpg")
 
+    log.info("Тест сложения с размытием Гаусса...")
+    artwork3 = ArtworkGrayscale(img=artwork1.handmade_gaussian_blur())
+    result = artwork1 + artwork3
+    result.save_image(path = saved_file_dir / "original_plus_gaussian_blur.jpg")
+
+    log.info("Тест сложения grayscale изображения и выделенные границы")
+    artwork_gray = ArtworkGrayscale(path=saved_file_path)
+    artwork_sobel = ArtworkGrayscale(img = artwork_gray.handmade_highlight_borders())
+    result = artwork_gray + artwork_sobel
+    result.save_image(path = saved_file_dir / "grayscale_plus_highlight_borders.jpg")
+    result = artwork_sobel + artwork_gray
+    result.save_image(path = saved_file_dir / "highlight_borders_plus_grayscale.jpg")
 
 if __name__ == "__main__":
     main()
