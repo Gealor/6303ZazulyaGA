@@ -48,15 +48,15 @@ def analyze_file(
         # 95% интервал рассеяния
         scatter_margin = 1.96 * std
 
-        stats.append(
-            {
+        data = {
                 "Medium": medium,
                 "Mean": mean,
                 "Std": std,
                 "CI_Margin": ci_margin,
                 "Scatter_Margin": scatter_margin,
             }
-        )
+        log.info("Получены данные о материале: %s", data)
+        stats.append(data)
 
     stats_df = pd.DataFrame(stats).set_index("Medium")
 
