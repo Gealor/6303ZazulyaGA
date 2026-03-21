@@ -28,7 +28,7 @@ def create_dir(name: str = config.PAINTINGS_DIR_NAME) -> Path:
     return painting_dir
 
 
-def read_csv_file(file: Path = config.MET_OBJECTS_FILE) -> list[MetObject]:
+def read_csv_file(file: Path = config.MET_OBJECTS_PATH) -> list[MetObject]:
     """
     Чтение .csv файла и получение всех объектов с их идентификаторами и классификациями(классами)
     """

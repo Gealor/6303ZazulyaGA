@@ -1,5 +1,6 @@
 import random
 
+from analysis.pipeline import analyze_file, run_pipeline
 from core.artwork import ArtworkColorful, ArtworkGrayscale
 from core.files_processor import CSVFileProcessor
 from core.image_processor import ImageProcessor
@@ -40,5 +41,11 @@ def main():
     result = artwork_sobel + artwork_gray
     result.save_image(path = saved_file_dir / "highlight_borders_plus_grayscale.jpg")
 
+def analyze_csv():
+    df_clean = run_pipeline()
+    stats_df, timeline_df = analyze_file(df_clean)
+
 if __name__ == "__main__":
-    main()
+    # main()
+    log.info("Начало аналитики...")
+    analyze_csv()
