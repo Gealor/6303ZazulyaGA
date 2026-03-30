@@ -16,7 +16,7 @@ def plot_graphs(
 
     bar = ax.bar(
         stats_df.index,
-        stats_df["Mean"],
+        stats_df["mean"],
         yerr = stats_df["CI_Margin"], # черные маленькие усы на графике столбчатой диаграммы
         color = "blue",
         edgecolor = "black",
@@ -26,7 +26,7 @@ def plot_graphs(
 
     ax.errorbar(
         stats_df.index,
-        stats_df["Mean"],
+        stats_df["mean"],
         yerr = stats_df["Scatter_Margin"], # красные длинные усы на графике столбчатой диаграммы
         ecolor = "red",
         capsize = 3,
