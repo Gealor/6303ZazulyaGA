@@ -64,7 +64,6 @@ def summarize_chunks(chunks: Iterator[pd.DataFrame]) -> Dict[str, Any]:
         chunk['Duration_sq'] = chunk['Duration']**2
         # Основная статистика (Mean, Std)
         # agg и aggregate - одно и то же, просто agg - это элиас
-        # теперь вместо lambda можно использовать встроенные функции, написанные на C
         # Medium теперь индекс, т.к. мы группируем по нему
         c_stats = chunk.groupby("Medium").agg(
             sum_x=('Duration', 'sum'),
