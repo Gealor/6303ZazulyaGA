@@ -5,9 +5,14 @@ import numpy as np
 # Files and dirs
 PAINTINGS_DIR_NAME = "paintings"
 METADATA_FILE = "metadata.json"
+BAR_FIG_NAME = "столбчатая_диаграмма.png"
+SLIDE_WINDOW_NAME = "график_скользящее_окно.png"
+
 BASE_DIR = Path(__file__).parent
 
-MET_OBJECTS_FILE = BASE_DIR / "MetObjects.csv"
+MET_OBJECTS_PATH = BASE_DIR / "MetObjects.csv"
+BAR_FIG_PATH = BASE_DIR / BAR_FIG_NAME
+SLIDE_WINDOW_PATH = BASE_DIR / SLIDE_WINDOW_NAME
 PAINTING_CLASSIFICATION = "Paintings"
 
 ORIGINAL_IMAGE = "original.jpg"

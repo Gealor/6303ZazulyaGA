@@ -87,13 +87,13 @@ class CSVFileProcessor(AbstractFileProcessor):
 
     def start_pipeline(
         self,
-        read_file: Path = config.MET_OBJECTS_FILE,
+        read_file: Path = config.MET_OBJECTS_PATH,
         classification: str = config.PAINTING_CLASSIFICATION,
         file_name: str = config.ORIGINAL_IMAGE,
     ) -> Tuple[Path, Path]:
         return super().start_pipeline(read_file, classification, file_name)
 
-    def read_file(self, file: Path = config.MET_OBJECTS_FILE) -> list[BaseObject]:
+    def read_file(self, file: Path = config.MET_OBJECTS_PATH) -> list[BaseObject]:
         """
         Чтение .csv файла и получение всех объектов с их идентификаторами и классификациями(классами)
         """
