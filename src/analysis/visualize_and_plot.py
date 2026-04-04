@@ -9,6 +9,7 @@ def plot_graphs(
     stats_df: pd.DataFrame,
     timeline_df: pd.DataFrame,
     max_duration_medium: int | str,
+    show_plots: bool = False,
 ):
     log.info("Построение графиков...\n")
     log.info("Построение столбцовой диаграммы...")
@@ -38,7 +39,8 @@ def plot_graphs(
     plt.xticks(rotation=45, ha='right')
     plt.legend()
     plt.savefig(config.BAR_FIG_PATH)
-    plt.show()
+    if show_plots:
+        plt.show()
 
     log.info("Построение графика зависимости от времени со скользящим окном...")
     plt.figure(figsize=(10, 5))
@@ -61,4 +63,5 @@ def plot_graphs(
     plt.legend()
     plt.tight_layout() # автоматически настраивает отступы между элементами
     plt.savefig(config.SLIDE_WINDOW_PATH)
-    plt.show()
+    if show_plots:
+        plt.show()
