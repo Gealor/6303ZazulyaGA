@@ -1,0 +1,18 @@
+import argparse
+
+
+def prepare_argparser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Скачивание изображений из Met API")
+    parser.add_argument(
+        "count",
+        type=int,
+        default=1,
+        help="Количество изображений для скачивания (по умолчанию: 1)",
+    )
+    parser.add_argument(
+        "--only-analyze",
+        action="store_true",
+        help="Только анализ, без скачивания"
+    )
+
+    return parser

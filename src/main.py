@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Literal
 
 from analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
+from argparser import prepare_argparser
 from core.artwork import ArtworkColorful, ArtworkGrayscale
 from core.files_processor import CSVFileProcessor
 from core.image_processor import ImageProcessor
@@ -41,7 +42,7 @@ def analyze_csv(version: Literal["old", "new"]):
     else:
         run_full_analysis()
 
-def main(only_analize: bool = True):
+def main(count: int, only_analize: bool = True):
     log.info("Начало аналитики...")
     analyze_csv("new")
     if only_analize:
@@ -51,7 +52,7 @@ def main(only_analize: bool = True):
     file_processor = CSVFileProcessor()
 
     log.info("Начало подготовки данных...")
-    list_paths = file_processor.start_pipeline()
+    list_paths = file_processor.start_pipeline(count=count)
     saved_file_path, saved_file_dir = list_paths[0]
 
     # artwork = ArtworkGrayscale(path=saved_file_path)
@@ -65,4 +66,6 @@ def main(only_analize: bool = True):
 
 
 if __name__ == "__main__":
-    main(only_analize=False)
+    parser = prepare_argparser()
+    args = parser.parse_args()
+    main(count=args.count, only_analize=args.only_analyze)

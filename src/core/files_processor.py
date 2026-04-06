@@ -50,10 +50,18 @@ class AbstractFileProcessor(ABC):
 
     def _get_and_download(
         self, object_id: str, file_path: Path, dir_path: Path,
-    ) -> None:
+    ) -> bool:
         metadata_path = dir_path / config.METADATA_FILE
         extended_object = make_request(object_id, metadata_path=metadata_path)
+        if not extended_object.primary_image:
+            log.warning(
+                "Объект с ID=%s не содержит ссылки на скачивание. Пропускаем этот файл",
+                extended_object.object_id,
+            )
+            return False
+
         download_files(path=file_path, url=extended_object.primary_image)
+        return True
 
     def start_pipeline(
         self,
@@ -88,12 +96,13 @@ class AbstractFileProcessor(ABC):
             dir_path = self.full_path / dir_name
             file_path = dir_path / file_name
             self._create_dir(path = dir_path)
-            self._get_and_download(
+            success_download = self._get_and_download(
                 object_id=obj.object_id,
                 file_path=file_path,
                 dir_path=dir_path,
             )
-            results.append((file_path, dir_path))
+            if success_download:
+                results.append((file_path, dir_path))
 
         return results
 
