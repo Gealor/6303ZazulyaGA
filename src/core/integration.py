@@ -37,7 +37,7 @@ def make_request(value: str, url: str = config.BASE_URL) -> ImageObject:
         )
     except ValueError as e:
         log.error("Некорректный формат ответа: %s", e)
-        raise e
+        raise
 
     log.info("Ответ успешно получен.")
     return image_object
