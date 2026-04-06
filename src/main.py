@@ -51,7 +51,8 @@ def main(only_analize: bool = True):
     file_processor = CSVFileProcessor()
 
     log.info("Начало подготовки данных...")
-    saved_file_path, saved_file_dir = file_processor.start_pipeline()
+    list_paths = file_processor.start_pipeline()
+    saved_file_path, saved_file_dir = list_paths[0]
 
     # artwork = ArtworkGrayscale(path=saved_file_path)
     artwork = ArtworkColorful(path=saved_file_path)
@@ -64,4 +65,4 @@ def main(only_analize: bool = True):
 
 
 if __name__ == "__main__":
-    main(only_analize=True)
+    main(only_analize=False)

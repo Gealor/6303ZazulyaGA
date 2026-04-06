@@ -22,14 +22,18 @@ def _save_metadata_in_file(
         log.info("Метаданные успешно сохранены.")
 
 
-def make_request(value: str, url: str = config.BASE_URL) -> ImageObject:
+def make_request(
+    value: str,
+    metadata_path: Path,
+    url: str = config.BASE_URL,
+) -> ImageObject:
     info_url = url + value
     log.info(f"Делаю запрос на {info_url}...")
     response = requests.get(url=info_url)
     response.raise_for_status()
 
     data = response.json()
-    _save_metadata_in_file(data=data)
+    _save_metadata_in_file(data=data, path=metadata_path)
     try:
         image_object = ImageObject(
             object_id=data.get("objectID"),

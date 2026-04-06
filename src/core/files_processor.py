@@ -4,7 +4,7 @@ import random
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Tuple
+from typing import List, Tuple
 
 import config
 from core.integration import download_files, make_request
@@ -36,30 +36,32 @@ class AbstractFileProcessor(ABC):
             log.info("Удаление папки %s...", self.full_path.as_posix())
             shutil.rmtree(self.full_path)
 
-    def _create_dir(self):
+    def _create_dir(self, path: Path | None = None):
         """
-        Создание нужной директории с именем name
+        Создание директорию path, если не указано, то создает базовую директорию
         """
-        if not os.path.exists(self.full_path):
-            log.info("Создание директории %s...", self.save_folder)
-            os.makedirs(self.full_path)
+        if path is None:
+            path = self.full_path
+        if not path.exists():
+            log.info("Создание директории %s...", path.name)
+            path.mkdir(parents=True, exist_ok=True)
         else:
             log.info("Директория уже создана. Пропускаем...")
 
     def _get_and_download(
-        self, object_id: str, file_name: str = config.ORIGINAL_IMAGE,
-    ) -> Path:
-        extended_object = make_request(object_id)
-        file_path = self.full_path / file_name
-        download_files(path=self.full_path / file_name, url=extended_object.primary_image)
-        return file_path
+        self, object_id: str, file_path: Path, dir_path: Path,
+    ) -> None:
+        metadata_path = dir_path / config.METADATA_FILE
+        extended_object = make_request(object_id, metadata_path=metadata_path)
+        download_files(path=file_path, url=extended_object.primary_image)
 
     def start_pipeline(
         self,
         read_file: Path,
+        count: int = 1,
         classification: str = config.PAINTING_CLASSIFICATION,
         file_name: str = config.ORIGINAL_IMAGE,
-    ) -> Tuple[Path, Path]:
+    ) -> List[Tuple[Path, Path]]:
         self._clear_folder()
         self._create_dir()
         objects = self.read_file(read_file)
@@ -70,16 +72,30 @@ class AbstractFileProcessor(ABC):
             elem for elem in objects if elem.classification == classification
         ]
         # Выбираю случайный объект
-        log.info("Выбор случайного элемента...")
-        random_object = random.choice(filtered_objects)
-        log.info("Выбран объект с ID = %s", random_object.object_id)
-
-        log.info("Запрос к стороннему API...")
-        saved_file_path = self._get_and_download(
-            object_id=random_object.object_id, file_name=file_name,
+        log.info("Выбор %d случайных элементов...", count)
+        random_objects = random.sample(filtered_objects, k=count)
+        log.info(
+            "IDs выбранных объектов: %s",
+            [random_object.object_id for random_object in random_objects]
         )
+        results = []
+        for index, obj in enumerate(random_objects, start=1):
+            log.info("Обработка объекта #%d с ID = %s", index, obj.object_id)
+            file_name, dir_name = (
+                f"{index}_{obj.object_id}_{config.ORIGINAL_IMAGE}",
+                f"{index}_{obj.object_id}",
+            )
+            dir_path = self.full_path / dir_name
+            file_path = dir_path / file_name
+            self._create_dir(path = dir_path)
+            self._get_and_download(
+                object_id=obj.object_id,
+                file_path=file_path,
+                dir_path=dir_path,
+            )
+            results.append((file_path, dir_path))
 
-        return saved_file_path, saved_file_path.parent
+        return results
 
 
 class CSVFileProcessor(AbstractFileProcessor):
@@ -88,10 +104,16 @@ class CSVFileProcessor(AbstractFileProcessor):
     def start_pipeline(
         self,
         read_file: Path = config.MET_OBJECTS_PATH,
+        count: int = 1,
         classification: str = config.PAINTING_CLASSIFICATION,
         file_name: str = config.ORIGINAL_IMAGE,
-    ) -> Tuple[Path, Path]:
-        return super().start_pipeline(read_file, classification, file_name)
+    ) -> List[Tuple[Path, Path]]:
+        return super().start_pipeline(
+            read_file=read_file,
+            count=count,
+            classification=classification,
+            file_name=file_name,
+        )
 
     def read_file(self, file: Path = config.MET_OBJECTS_PATH) -> list[BaseObject]:
         """
