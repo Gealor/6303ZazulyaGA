@@ -104,6 +104,8 @@ class AbstractFileProcessor(ABC):
             if success_download:
                 results.append((file_path, dir_path))
 
+            log.info("Объект %s обработан.\n", file_name)
+
         return results
 
 

@@ -42,25 +42,33 @@ def analyze_csv(version: Literal["old", "new"]):
     else:
         run_full_analysis()
 
-def main(count: int, only_analize: bool = True):
-    log.info("Начало аналитики...")
-    analyze_csv("new")
-    if only_analize:
-        return
-    log.info("Данные проанализированны.\n")
+
+def handle_one_image(file_path: Path, file_dir: Path):
+    '''
+    Функция обработчик одного изображения.
+    '''
+    artwork = ArtworkColorful(path=file_path)
+    log.info("Получено изображение: %s", artwork)
+    image_processor = ImageProcessor(artwork=artwork, save_path=file_dir)
+    log.info("Начало обработки изображения %s...", file_path.stem)
+    image_processor.process_artwork()
+
+
+@time_meter_decorator
+def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool = True):
+    if analyze_file:
+        log.info("Начало аналитики...")
+        analyze_csv("new")
+        if only_analize:
+            return
+        log.info("Данные проанализированны.\n")
 
     file_processor = CSVFileProcessor()
 
     log.info("Начало подготовки данных...")
     list_paths = file_processor.start_pipeline(count=count)
-    saved_file_path, saved_file_dir = list_paths[0]
-
-    # artwork = ArtworkGrayscale(path=saved_file_path)
-    artwork = ArtworkColorful(path=saved_file_path)
-    log.info("Получено изображение: %s", artwork)
-    image_processor = ImageProcessor(artwork=artwork, save_path=saved_file_dir)
-    log.info("Начало обработки изображения...")
-    image_processor.process_artwork()
+    for saved_file_path, saved_file_dir in list_paths:
+        handle_one_image(file_path=saved_file_path, file_dir=saved_file_dir)
 
     # _test_add(saved_file_path, saved_file_dir)
 
@@ -68,4 +76,4 @@ def main(count: int, only_analize: bool = True):
 if __name__ == "__main__":
     parser = prepare_argparser()
     args = parser.parse_args()
-    main(count=args.count, only_analize=args.only_analyze)
+    sync_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze)
