@@ -10,6 +10,11 @@ def prepare_argparser() -> argparse.ArgumentParser:
         help="Количество изображений для скачивания (по умолчанию: 1)",
     )
     parser.add_argument(
+        "--parallel",
+        action="store_true",
+        help="Обрабатывать скачивание и обработку файлов параллельно/конкурентно"
+    )
+    parser.add_argument(
         "--analyze-file",
         action="store_true",
         help="Включить аналитику файла"

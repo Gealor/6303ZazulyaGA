@@ -16,3 +16,4 @@ requests
 opencv-python
 aiohttp
 aiofiles
+aioshutil

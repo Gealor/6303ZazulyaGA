@@ -35,13 +35,14 @@ async def _make_request(info_url: str, client_session: aiohttp.ClientSession) ->
 
 async def make_request_and_save_info(
     value: str,
+    metadata_path: Path,
     client_session: aiohttp.ClientSession,
     url: str = config.BASE_URL,
 ) -> ImageObject:
     info_url = url + value
     data = await _make_request(info_url=info_url, client_session=client_session)
 
-    await _save_metadata_in_file(data=data)
+    await _save_metadata_in_file(data=data, path=metadata_path)
     try:
         image_object = ImageObject(
             object_id=data["objectID"],
@@ -58,7 +59,7 @@ async def make_request_and_save_info(
     return image_object
 
 
-async def download_files(path: Path, url: str, client_session: aiohttp.ClientSession):
+async def download_files(object_id: str, path: Path, url: str, client_session: aiohttp.ClientSession):
     log.info("Скачиваем файл с %s в директорию %s...", url, path.as_posix())
     async with client_session.get(url=url) as response:
         response.raise_for_status()
@@ -67,4 +68,4 @@ async def download_files(path: Path, url: str, client_session: aiohttp.ClientSes
     async with aiofiles.open(path, mode="wb") as file:
         await file.write(content)
 
-    log.info("Файл успешно скачан.")
+    log.info("Файл с ID=%s успешно скачан.", object_id)

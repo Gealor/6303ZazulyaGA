@@ -1,13 +1,19 @@
+import asyncio
+from concurrent.futures import ProcessPoolExecutor
 import random
+from multiprocessing import Process
 from pathlib import Path
 from typing import Literal
+
+import aiohttp
 
 from analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
 from argparser import prepare_argparser
 from core.artwork import ArtworkColorful, ArtworkGrayscale
+from core.async_version.async_files_processor import CSVAsyncFileProcessor
 from core.files_processor import CSVFileProcessor
 from core.image_processor import ImageProcessor
-from decorators import time_meter_decorator
+from decorators import async_time_meter_decorator, time_meter_decorator
 from logger import log
 
 random.seed(52)
@@ -64,16 +70,68 @@ def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool
         log.info("Данные проанализированны.\n")
 
     file_processor = CSVFileProcessor()
-
+    log.info("=== Синхронная обработка данных ===")
     log.info("Начало подготовки данных...")
     list_paths = file_processor.start_pipeline(count=count)
+    if not list_paths:
+        log.info("Нет данных для обработки.")
+        return
+
     for saved_file_path, saved_file_dir in list_paths:
         handle_one_image(file_path=saved_file_path, file_dir=saved_file_dir)
 
     # _test_add(saved_file_path, saved_file_dir)
 
+@async_time_meter_decorator
+async def concurency_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool = True):
+    if analyze_file:
+        log.info("Начало аналитики...")
+        analyze_csv("new")
+        if only_analize:
+            return
+        log.info("Данные проанализированны.\n")
+
+    log.info("=== Параллельная обработка данных ===")
+    async with aiohttp.ClientSession() as session:
+        file_processor = CSVAsyncFileProcessor(client_session=session)
+        log.info("Начало подготовки данных...")
+        list_paths = await file_processor.start_pipeline(count=count)
+
+    if not list_paths:
+        log.info("Нет данных для обработки.")
+        return
+
+    # tasks = [
+    #     Process(target=handle_one_image, args=(saved_file_path, saved_file_dir))
+    #     for saved_file_path, saved_file_dir in list_paths
+    # ]
+    # for p in tasks:
+    #     p.start()
+
+    # БЛОКИРУЕТ EVENT_LOOP
+    # for p in tasks: # ждем завершения ВСЕХ процессов
+    #     p.join()
+
+    log.info("Запуск пула процессов для обработки изображений...")
+    loop = asyncio.get_running_loop()
+
+    # Используем ProcessPoolExecutor, т.к по умолчанию использует количество ядер CPU, т.е. не будет проблем с OOM
+    with ProcessPoolExecutor() as pool:
+        # Создаем задачи для Event Loop, которые будут выполняться в пуле процессов
+        processing_tasks =[
+            loop.run_in_executor(pool, handle_one_image, saved_file_path, saved_file_dir)
+            for saved_file_path, saved_file_dir in list_paths
+        ]
+
+        # Асинхронно дожидаемся завершения ВСЕХ тяжелых вычислений.
+        # При этом сам Event Loop не блокируется.
+        await asyncio.gather(*processing_tasks)
+
 
 if __name__ == "__main__":
     parser = prepare_argparser()
     args = parser.parse_args()
-    sync_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze)
+    if args.parallel:
+        asyncio.run(concurency_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze))
+    else:
+        sync_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze)
