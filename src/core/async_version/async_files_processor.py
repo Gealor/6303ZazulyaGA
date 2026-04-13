@@ -122,7 +122,7 @@ class AbstractAsyncFileProcessor(ABC):
         )
 
         list_coros = [
-            self._handle_one_element(index, obj) 
+            self._handle_one_element(index, obj)
             for index, obj in enumerate(random_objects, start=1)
         ]
         results = await asyncio.gather(*list_coros)

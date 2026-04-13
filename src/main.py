@@ -1,6 +1,6 @@
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
 import random
+from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Process
 from pathlib import Path
 from typing import Literal
