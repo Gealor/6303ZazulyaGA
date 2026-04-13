@@ -7,12 +7,13 @@ from pathlib import Path
 from typing import List, Tuple
 
 import config
-from core.integration import download_files, make_request
+from core.file_processors.csv.base_csv_file_processor import BaseCSVFileProcessor
+from core.integrations.integration import download_files, make_request
 from dataclass import BaseObject, MetObject
 from logger import log
 
 
-class AbstractFileProcessor(ABC):
+class CSVFileProcessor(BaseCSVFileProcessor):
     def __init__(
         self,
         save_folder: str = config.PAINTINGS_DIR_NAME,
@@ -24,10 +25,6 @@ class AbstractFileProcessor(ABC):
     @property
     def full_path(self):
         return self.base_dir / self.save_folder
-
-    @abstractmethod
-    def read_file(self, file: Path) -> list[MetObject]:
-        pass
 
     def _clear_folder(self):
         if self.full_path.exists():
@@ -64,7 +61,7 @@ class AbstractFileProcessor(ABC):
 
     def start_pipeline(
         self,
-        read_file: Path,
+        read_file: Path = config.MET_OBJECTS_PATH,
         count: int = 1,
         classification: str = config.PAINTING_CLASSIFICATION,
         file_name: str = config.ORIGINAL_IMAGE,
@@ -107,45 +104,3 @@ class AbstractFileProcessor(ABC):
 
         return results
 
-
-class CSVFileProcessor(AbstractFileProcessor):
-    def start_pipeline(
-        self,
-        read_file: Path = config.MET_OBJECTS_PATH,
-        count: int = 1,
-        classification: str = config.PAINTING_CLASSIFICATION,
-        file_name: str = config.ORIGINAL_IMAGE,
-    ) -> List[Tuple[Path, Path]]:
-        return super().start_pipeline(
-            read_file=read_file,
-            count=count,
-            classification=classification,
-            file_name=file_name,
-        )
-
-    def read_file(self, file: Path = config.MET_OBJECTS_PATH) -> list[BaseObject]:
-        """
-        Чтение .csv файла и получение всех объектов с их идентификаторами и классификациями(классами)
-        """
-        result = []
-        log.info("Чтение .csv файла...")
-        with open(
-            file,
-            mode="r",
-            encoding="utf-8-sig",
-        ) as f:  # sig, чтобы убрать \ufeff символ
-            try:
-                csv_reader = csv.DictReader(f)
-            except Exception as e:
-                log.error("Ошибка при чтении csv файла: %s", e)
-                raise
-
-            for row in csv_reader:
-                obj = MetObject(
-                    object_id=row["Object ID"],
-                    classification=row["Classification"],
-                )
-                result.append(obj)
-
-        log.info("Файл прочитан успешно.")
-        return result

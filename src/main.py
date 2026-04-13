@@ -1,7 +1,6 @@
 import asyncio
 import random
 from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Process
 from pathlib import Path
 from typing import Literal
 
@@ -10,9 +9,8 @@ import aiohttp
 from analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
 from argparser import prepare_argparser
 from core.artwork import ArtworkColorful, ArtworkGrayscale
-from core.async_version.async_files_processor import CSVAsyncFileProcessor
-from core.files_processor import CSVFileProcessor
-from core.image_processor import ImageProcessor
+from core.file_processors import CSVAsyncFileProcessor, CSVFileProcessor
+from core.image_processors.image_processor import ImageProcessor
 from decorators import async_time_meter_decorator, time_meter_decorator
 from logger import log
 
@@ -76,6 +74,7 @@ def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool
     if not list_paths:
         log.info("Нет данных для обработки.")
         return
+    log.info("Итого изображений: %d", len(list_paths))
 
     for saved_file_path, saved_file_dir in list_paths:
         handle_one_image(file_path=saved_file_path, file_dir=saved_file_dir)
@@ -101,6 +100,7 @@ async def concurency_pipeline_main(count: int, analyze_file: bool = True, only_a
         log.info("Нет данных для обработки.")
         return
 
+    log.info("Итого изображений: %d \n", len(list_paths))
     # tasks = [
     #     Process(target=handle_one_image, args=(saved_file_path, saved_file_dir))
     #     for saved_file_path, saved_file_dir in list_paths
