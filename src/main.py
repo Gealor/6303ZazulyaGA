@@ -51,10 +51,13 @@ def handle_one_image(file_path: Path, file_dir: Path):
     '''
     Функция обработчик одного изображения.
     '''
+    file_name = file_path.stem
+    parts = file_name.split("_")
+    id_image = int(parts[0])
     artwork = ArtworkColorful(path=file_path)
-    log.info("Получено изображение: %s", artwork)
-    image_processor = ImageProcessor(artwork=artwork, save_path=file_dir)
-    log.info("Начало обработки изображения %s...", file_path.stem)
+    log.info("[%d] Получено изображение: %s", id_image, artwork)
+    image_processor = ImageProcessor(artwork=artwork, save_path=file_dir, id_image=id_image)
+    log.info("[%d] Начало обработки изображения %s...", id_image, file_path.stem)
     image_processor.process_artwork()
 
 
@@ -118,7 +121,7 @@ async def concurency_pipeline_main(count: int, analyze_file: bool = True, only_a
     # Используем ProcessPoolExecutor, т.к по умолчанию использует количество ядер CPU, т.е. не будет проблем с OOM
     with ProcessPoolExecutor() as pool:
         # Создаем задачи для Event Loop, которые будут выполняться в пуле процессов
-        processing_tasks =[
+        processing_tasks = [
             loop.run_in_executor(pool, handle_one_image, saved_file_path, saved_file_dir)
             for saved_file_path, saved_file_dir in list_paths
         ]
@@ -135,3 +138,4 @@ if __name__ == "__main__":
         asyncio.run(concurency_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze))
     else:
         sync_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze)
+

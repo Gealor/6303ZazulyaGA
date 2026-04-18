@@ -11,14 +11,16 @@ class ImageProcessor:
         self,
         artwork: Artwork,
         save_path: Path,
+        id_image: int
     ):
         self.artwork = artwork
         self.save_path = save_path
         self.filename_template = save_path.name
+        self.id_image = id_image
 
     def _apply_filter(self, name: str, options: dict):
         """Унифицированное применение фильтров и сохранение"""
-        log.info("Сравнение %s...", name)
+        log.info("[%d] Сравнение %s...", self.id_image, name)
         handmade = options["handmade"]()
         opencv2 = options["opencv"]()
         self.artwork.save_image(
@@ -77,4 +79,4 @@ class ImageProcessor:
         for name in tasks:
             self._apply_filter(name=name, options=tasks[name])
 
-        log.info("Обработка завершена. Файлы сохранены в %s", self.save_path)
+        log.info("[%d] Обработка завершена. Файлы сохранены в %s", self.id_image, self.save_path)
