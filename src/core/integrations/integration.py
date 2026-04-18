@@ -22,29 +22,33 @@ def _save_metadata_in_file(
         log.info("Метаданные успешно сохранены.")
 
 
-def make_request(value: str, url: str = config.BASE_URL) -> ImageObject:
+def make_request(
+    value: str,
+    metadata_path: Path,
+    url: str = config.BASE_URL,
+) -> ImageObject:
     info_url = url + value
-    log.info(f"Делаю запрос на {info_url}...")
+    log.info("Делаю запрос на %s...", info_url)
     response = requests.get(url=info_url)
     response.raise_for_status()
 
     data = response.json()
-    _save_metadata_in_file(data=data)
+    _save_metadata_in_file(data=data, path=metadata_path)
     try:
         image_object = ImageObject(
             object_id=data.get("objectID"),
-            primary_image=data.get("primaryImage"),
+            primary_image=data.get("primaryImage") or data.get("primaryImageSmall"),
         )
     except ValueError as e:
         log.error("Некорректный формат ответа: %s", e)
-        raise e
+        raise
 
     log.info("Ответ успешно получен.")
     return image_object
 
 
 def download_files(path: Path, url: str):
-    log.info(f"Скачиваем файл с {url} в директорию {path.as_posix()}...")
+    log.info("Скачиваем файл с %s в директорию %s...", url, path.as_posix())
     response = requests.get(url)
     with open(path, mode="wb") as file:
         file.write(response.content)

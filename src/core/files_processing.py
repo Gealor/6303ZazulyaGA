@@ -43,7 +43,7 @@ def read_csv_file(file: Path = config.MET_OBJECTS_PATH) -> list[MetObject]:
             csv_reader = csv.DictReader(f)
         except Exception as e:
             log.error("Ошибка при чтении csv файла: %s", e)
-            raise e
+            raise
 
         for row in csv_reader:
             obj = MetObject(

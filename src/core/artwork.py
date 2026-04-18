@@ -96,7 +96,7 @@ class Artwork(ABC):
 
         return kernel
 
-    def save_image(self, path: Path, img: np.ndarray | None = None):
+    def save_image(self, path: Path | str, img: np.ndarray | None = None):
         if img is None:
             img = self._img
 
