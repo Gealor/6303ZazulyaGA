@@ -6,13 +6,13 @@ from typing import Literal
 
 import aiohttp
 
-from analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
-from argparser import prepare_argparser
-from decorators import async_time_meter_decorator, time_meter_decorator
-from images.artwork import ArtworkColorful, ArtworkGrayscale
-from images.file_processors import CSVAsyncFileProcessor, CSVFileProcessor
-from images.image_processors.image_processor import ImageProcessor
-from logger import log
+from memetl.analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
+from memetl.argparser import prepare_argparser
+from memetl.decorators import async_time_meter_decorator, time_meter_decorator
+from memetl.images.artwork import ArtworkColorful, ArtworkGrayscale
+from memetl.images.file_processors import CSVAsyncFileProcessor, CSVFileProcessor
+from memetl.images.image_processors.image_processor import ImageProcessor
+from memetl.logger import log
 
 random.seed(52)
 

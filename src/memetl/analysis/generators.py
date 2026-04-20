@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterator
 import numpy as np
 import pandas as pd
 
-from logger import log
+from memetl.logger import log
 
 
 def read_chunks(file_path: Path | str, chunksize: int = 50000) -> Iterator[pd.DataFrame]:

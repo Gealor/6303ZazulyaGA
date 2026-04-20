@@ -1,9 +1,9 @@
 from pathlib import Path
 from string import Template
 
-import config
-from images.artwork import Artwork
-from logger import log
+import memetl.config as config
+from memetl.images.artwork import Artwork
+from memetl.logger import log
 
 
 class ImageProcessor:

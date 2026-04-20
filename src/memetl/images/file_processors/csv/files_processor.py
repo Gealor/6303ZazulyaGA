@@ -6,11 +6,11 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Tuple
 
-import config
-from dataclass import BaseObject, MetObject
-from images.file_processors.csv.base_csv_file_processor import BaseCSVFileProcessor
-from images.integrations.integration import download_files, make_request
-from logger import log
+import memetl.config as config
+from memetl.dataclass import BaseObject, MetObject
+from memetl.images.file_processors.csv.base_csv_file_processor import BaseCSVFileProcessor
+from memetl.images.integrations.integration import download_files, make_request
+from memetl.logger import log
 
 
 class CSVFileProcessor(BaseCSVFileProcessor):

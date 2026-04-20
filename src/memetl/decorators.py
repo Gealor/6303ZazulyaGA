@@ -1,7 +1,7 @@
 import time
 from typing import Any, Awaitable, Callable, Coroutine, ParamSpec, TypeVar
 
-from logger import log
+from memetl.logger import log
 
 T = TypeVar("T")
 P = ParamSpec("P")

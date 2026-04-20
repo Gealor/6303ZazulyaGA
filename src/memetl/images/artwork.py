@@ -8,14 +8,14 @@ from typing import Self
 import cv2
 import numpy as np
 
-import config
-from decorators import time_meter_decorator
-from images.exceptions import (
+import memetl.config as config
+from memetl.decorators import time_meter_decorator
+from memetl.images.exceptions import (
     AddImagesException,
     ConstructorArtworkException,
     ShapeArtworkColorfulException,
 )
-from logger import log
+from memetl.logger import log
 
 
 class Artwork(ABC):

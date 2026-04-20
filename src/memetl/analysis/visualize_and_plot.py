@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import config
-from logger import log
+import memetl.config as config
+from memetl.logger import log
 
 
 def plot_graphs(

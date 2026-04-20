@@ -1,6 +1,6 @@
 import logging
 
-import config
+import memetl.config as config
 
 logging.basicConfig(
     level=logging.INFO,

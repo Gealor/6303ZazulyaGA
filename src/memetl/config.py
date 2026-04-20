@@ -9,7 +9,7 @@ BAR_FIG_NAME = "столбчатая_диаграмма.png"
 SLIDE_WINDOW_NAME = "график_скользящее_окно.png"
 
 BASE_DIR = Path(__file__).parent
-ROOT_DIR = BASE_DIR.parent
+ROOT_DIR = BASE_DIR.parent.parent
 ANALYSIS_RESULTS_PATH = ROOT_DIR / "analysis_results"
 
 MET_OBJECTS_PATH = ROOT_DIR / "data" / "MetObjects.csv"

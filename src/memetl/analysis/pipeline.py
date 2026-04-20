@@ -4,10 +4,10 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from analysis.generators import process_chunks, read_chunks, summarize_chunks
-from analysis.visualize_and_plot import plot_graphs
-from config import MET_OBJECTS_PATH
-from logger import log
+from memetl.analysis.generators import process_chunks, read_chunks, summarize_chunks
+from memetl.analysis.visualize_and_plot import plot_graphs
+from memetl.config import MET_OBJECTS_PATH
+from memetl.logger import log
 
 
 def run_pipeline(

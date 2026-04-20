@@ -7,16 +7,16 @@ import aiofiles.os
 import aiohttp
 import aioshutil
 
-import config
-from dataclass import MetObject
-from images.file_processors.csv.base_csv_file_processor import (
+import memetl.config as config
+from memetl.dataclass import MetObject
+from memetl.images.file_processors.csv.base_csv_file_processor import (
     BaseCSVFileProcessor,
 )
-from images.integrations.async_integration import (
+from memetl.images.integrations.async_integration import (
     download_files,
     make_request_and_save_info,
 )
-from logger import log
+from memetl.logger import log
 
 
 class CSVAsyncFileProcessor(BaseCSVFileProcessor):

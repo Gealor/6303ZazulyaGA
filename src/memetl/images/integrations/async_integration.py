@@ -5,9 +5,9 @@ from typing import Any
 import aiofiles
 import aiohttp
 
-import config
-from dataclass import ImageObject
-from logger import log
+import memetl.config as config
+from memetl.dataclass import ImageObject
+from memetl.logger import log
 
 
 async def _save_metadata_in_file(

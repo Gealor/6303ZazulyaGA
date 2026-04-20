@@ -6,10 +6,10 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Tuple
 
-import config
-from images.integrations.integration import download_files, make_request
-from dataclass import BaseObject, MetObject
-from logger import log
+import memetl.config as config
+from memetl.images.integrations.integration import download_files, make_request
+from memetl.dataclass import BaseObject, MetObject
+from memetl.logger import log
 
 
 class AbstractFileProcessor(ABC):

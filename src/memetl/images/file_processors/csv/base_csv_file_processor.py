@@ -1,10 +1,10 @@
 import csv
 from pathlib import Path
 
-import config
-from images.file_processors.abstract_file_processor import AbstractFileProcessor
-from dataclass import BaseObject, MetObject
-from logger import log
+import memetl.config as config
+from memetl.images.file_processors.abstract_file_processor import AbstractFileProcessor
+from memetl.dataclass import BaseObject, MetObject
+from memetl.logger import log
 
 
 class BaseCSVFileProcessor(AbstractFileProcessor):

@@ -3,4 +3,5 @@ __all__ = (
     "images",
 )
 
-from src import analysis, images
+from memetl import analysis
+from memetl import images
