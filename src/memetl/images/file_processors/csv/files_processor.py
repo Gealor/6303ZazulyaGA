@@ -17,7 +17,7 @@ class CSVFileProcessor(BaseCSVFileProcessor):
     def __init__(
         self,
         save_folder: str = config.PAINTINGS_DIR_NAME,
-        base_dir: Path = config.ROOT_DIR,
+        base_dir: Path = config.WORK_DIR,
     ):
         self.save_folder = save_folder
         self.base_dir = base_dir

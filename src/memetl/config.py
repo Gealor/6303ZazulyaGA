@@ -8,17 +8,22 @@ METADATA_FILE = "metadata.json"
 BAR_FIG_NAME = "столбчатая_диаграмма.png"
 SLIDE_WINDOW_NAME = "график_скользящее_окно.png"
 
-BASE_DIR = Path(__file__).parent
-ROOT_DIR = BASE_DIR.parent.parent
-ANALYSIS_RESULTS_PATH = ROOT_DIR / "analysis_results"
+# Пути к пакету (для данных внутри пакета)
+BASE_DIR = Path(__file__).parent  # src/memetl
+PACKAGE_DIR = BASE_DIR.parent.parent  # папка проекта (где src/)
 
-MET_OBJECTS_PATH = ROOT_DIR / "data" / "MetObjects.csv"
+# Пути к данным пакета (всегда доступны из пакета)
+MET_OBJECTS_PATH = PACKAGE_DIR / "data" / "MetObjects.csv"
+
+# Пути для сохранения результатов (в текущую рабочую директорию)
+WORK_DIR = Path.cwd()
+PAINTINGS_DIR = WORK_DIR / "paintings"
+ANALYSIS_RESULTS_PATH = WORK_DIR / "analysis_results"
 BAR_FIG_PATH = ANALYSIS_RESULTS_PATH / BAR_FIG_NAME
 SLIDE_WINDOW_PATH = ANALYSIS_RESULTS_PATH / SLIDE_WINDOW_NAME
+
 PAINTING_CLASSIFICATION = "Paintings"
-
 ORIGINAL_IMAGE = "original.jpg"
-
 
 # Integration config
 BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1/objects/"

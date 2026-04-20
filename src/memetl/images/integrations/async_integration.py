@@ -12,7 +12,7 @@ from memetl.logger import log
 
 async def _save_metadata_in_file(
     data: dict,
-    path: Path = config.ROOT_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
+    path: Path = config.WORK_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
 ) -> None:
     log.info("Сохраняю метаданные в %s...", path.as_posix())
     try:
