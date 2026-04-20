@@ -76,6 +76,14 @@ def analyze_file(
 def run_full_analysis(
     file_path: Path | str = MET_OBJECTS_PATH, top_n: int = 10, size_window: int = 20
 ):
+    """Запуск пайплайна обработки MetObjects.csv файла.
+
+    Args:
+        file_path (Path | str, optional): Путь до MetObjects.csv, по умолчанию в папке data.
+        top_n (int, optional): Значение N для вывода Top-N элементов, по умолчанию 10.
+        size_window (int, optional): Размер окна для графика со скользящим средним, по умолчанию 20.
+    """
+
     log.info("Запуск пайплайна обработки...")
 
     raw_chunks = read_chunks(file_path)

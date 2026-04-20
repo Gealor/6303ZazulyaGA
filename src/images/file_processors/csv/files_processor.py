@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import List, Tuple
 
 import config
+from dataclass import BaseObject, MetObject
 from images.file_processors.csv.base_csv_file_processor import BaseCSVFileProcessor
 from images.integrations.integration import download_files, make_request
-from dataclass import BaseObject, MetObject
 from logger import log
 
 
