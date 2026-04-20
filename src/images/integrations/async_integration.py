@@ -12,7 +12,7 @@ from logger import log
 
 async def _save_metadata_in_file(
     data: dict,
-    path: Path = config.BASE_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
+    path: Path = config.ROOT_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
 ) -> None:
     log.info("Сохраняю метаданные в %s...", path.as_posix())
     try:
@@ -24,7 +24,9 @@ async def _save_metadata_in_file(
         log.info("Метаданные успешно сохранены.")
 
 
-async def _make_request(info_url: str, client_session: aiohttp.ClientSession) -> dict[str, Any]:
+async def _make_request(
+    info_url: str, client_session: aiohttp.ClientSession
+) -> dict[str, Any]:
     log.info("Делаю запрос на %s...", info_url)
     async with client_session.get(url=info_url) as response:
         response.raise_for_status()
@@ -59,7 +61,9 @@ async def make_request_and_save_info(
     return image_object
 
 
-async def download_files(object_id: str, path: Path, url: str, client_session: aiohttp.ClientSession):
+async def download_files(
+    object_id: str, path: Path, url: str, client_session: aiohttp.ClientSession
+):
     log.info("Скачиваем файл с %s в директорию %s...", url, path.as_posix())
     async with client_session.get(url=url) as response:
         response.raise_for_status()

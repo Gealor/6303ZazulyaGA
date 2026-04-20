@@ -8,10 +8,10 @@ import aiohttp
 
 from analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
 from argparser import prepare_argparser
-from core.artwork import ArtworkColorful, ArtworkGrayscale
-from core.file_processors import CSVAsyncFileProcessor, CSVFileProcessor
-from core.image_processors.image_processor import ImageProcessor
 from decorators import async_time_meter_decorator, time_meter_decorator
+from images.artwork import ArtworkColorful, ArtworkGrayscale
+from images.file_processors import CSVAsyncFileProcessor, CSVFileProcessor
+from images.image_processors.image_processor import ImageProcessor
 from logger import log
 
 random.seed(52)

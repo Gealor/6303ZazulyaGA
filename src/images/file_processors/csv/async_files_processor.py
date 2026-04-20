@@ -8,14 +8,14 @@ import aiohttp
 import aioshutil
 
 import config
-from core.file_processors.csv.base_csv_file_processor import (
+from dataclass import MetObject
+from images.file_processors.csv.base_csv_file_processor import (
     BaseCSVFileProcessor,
 )
-from core.integrations.async_integration import (
+from images.integrations.async_integration import (
     download_files,
     make_request_and_save_info,
 )
-from dataclass import MetObject
 from logger import log
 
 
@@ -24,7 +24,7 @@ class CSVAsyncFileProcessor(BaseCSVFileProcessor):
         self,
         client_session: aiohttp.ClientSession,
         save_folder: str = config.PAINTINGS_DIR_NAME,
-        base_dir: Path = config.BASE_DIR,
+        base_dir: Path = config.ROOT_DIR,
     ):
         self.save_folder = save_folder
         self.base_dir = base_dir

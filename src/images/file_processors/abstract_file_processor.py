@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import config
-from core.integrations.integration import download_files, make_request
+from images.integrations.integration import download_files, make_request
 from dataclass import BaseObject, MetObject
 from logger import log
 

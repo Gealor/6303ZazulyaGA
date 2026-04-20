@@ -19,7 +19,7 @@ def time_meter_decorator(func: Callable[P, T]) -> Callable[P, T]:
 
 
 def async_time_meter_decorator(
-    func: Callable[P, Coroutine[Any, Any, T]]
+    func: Callable[P, Coroutine[Any, Any, T]],
 ) -> Callable[P, Coroutine[Any, Any, T]]:
     async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         start = time.perf_counter()

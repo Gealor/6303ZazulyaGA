@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import List, Tuple
 
 import config
-from core.file_processors.csv.base_csv_file_processor import BaseCSVFileProcessor
-from core.integrations.integration import download_files, make_request
+from images.file_processors.csv.base_csv_file_processor import BaseCSVFileProcessor
+from images.integrations.integration import download_files, make_request
 from dataclass import BaseObject, MetObject
 from logger import log
 
@@ -17,7 +17,7 @@ class CSVFileProcessor(BaseCSVFileProcessor):
     def __init__(
         self,
         save_folder: str = config.PAINTINGS_DIR_NAME,
-        base_dir: Path = config.BASE_DIR,
+        base_dir: Path = config.ROOT_DIR,
     ):
         self.save_folder = save_folder
         self.base_dir = base_dir
@@ -44,7 +44,10 @@ class CSVFileProcessor(BaseCSVFileProcessor):
             log.info("Директория уже создана. Пропускаем...")
 
     def _get_and_download(
-        self, object_id: str, file_path: Path, dir_path: Path,
+        self,
+        object_id: str,
+        file_path: Path,
+        dir_path: Path,
     ) -> bool:
         metadata_path = dir_path / config.METADATA_FILE
         extended_object = make_request(object_id, metadata_path=metadata_path)
@@ -57,7 +60,6 @@ class CSVFileProcessor(BaseCSVFileProcessor):
 
         download_files(path=file_path, url=extended_object.primary_image)
         return True
-
 
     def start_pipeline(
         self,
@@ -80,7 +82,7 @@ class CSVFileProcessor(BaseCSVFileProcessor):
         random_objects = random.sample(filtered_objects, k=count)
         log.info(
             "IDs выбранных объектов: %s",
-            [random_object.object_id for random_object in random_objects]
+            [random_object.object_id for random_object in random_objects],
         )
         results = []
         for index, obj in enumerate(random_objects, start=1):
@@ -91,7 +93,7 @@ class CSVFileProcessor(BaseCSVFileProcessor):
             )
             dir_path = self.full_path / dir_name
             file_path = dir_path / file_name
-            self._create_dir(path = dir_path)
+            self._create_dir(path=dir_path)
             success_download = self._get_and_download(
                 object_id=obj.object_id,
                 file_path=file_path,
@@ -103,4 +105,3 @@ class CSVFileProcessor(BaseCSVFileProcessor):
             log.info("Объект %s обработан.\n", file_name)
 
         return results
-

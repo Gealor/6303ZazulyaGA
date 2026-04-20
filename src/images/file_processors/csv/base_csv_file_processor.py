@@ -2,7 +2,7 @@ import csv
 from pathlib import Path
 
 import config
-from core.file_processors.abstract_file_processor import AbstractFileProcessor
+from images.file_processors.abstract_file_processor import AbstractFileProcessor
 from dataclass import BaseObject, MetObject
 from logger import log
 

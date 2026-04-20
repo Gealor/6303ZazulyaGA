@@ -10,7 +10,7 @@ from logger import log
 
 def _save_metadata_in_file(
     data: dict,
-    path: Path = config.BASE_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
+    path: Path = config.ROOT_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
 ) -> None:
     log.info("Сохраняю метаданные в %s...", path.as_posix())
     try:

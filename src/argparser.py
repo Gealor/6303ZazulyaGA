@@ -12,17 +12,13 @@ def prepare_argparser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--parallel",
         action="store_true",
-        help="Обрабатывать скачивание и обработку файлов параллельно/конкурентно"
+        help="Обрабатывать скачивание и обработку файлов параллельно/конкурентно",
     )
     parser.add_argument(
-        "--analyze-file",
-        action="store_true",
-        help="Включить аналитику файла"
+        "--analyze-file", action="store_true", help="Включить аналитику файла"
     )
     parser.add_argument(
-        "--only-analyze",
-        action="store_true",
-        help="Только анализ, без скачивания"
+        "--only-analyze", action="store_true", help="Только анализ, без скачивания"
     )
 
     return parser
