@@ -28,7 +28,7 @@ class CSVFileProcessor(BaseCSVFileProcessor):
 
     def _clear_folder(self):
         if self.full_path.exists():
-            log.info("Удаление папки %s...", self.full_path.as_posix())
+            log.debug("Удаление папки %s...", self.full_path.as_posix())
             shutil.rmtree(self.full_path)
 
     def _create_dir(self, path: Path | None = None):
@@ -38,10 +38,10 @@ class CSVFileProcessor(BaseCSVFileProcessor):
         if path is None:
             path = self.full_path
         if not path.exists():
-            log.info("Создание директории %s...", path.name)
+            log.debug("Создание директории %s...", path.name)
             path.mkdir(parents=True, exist_ok=True)
         else:
-            log.info("Директория уже создана. Пропускаем...")
+            log.debug("Директория уже создана. Пропускаем...")
 
     def _get_and_download(
         self,
@@ -80,7 +80,7 @@ class CSVFileProcessor(BaseCSVFileProcessor):
         # Выбираю случайный объект
         log.info("Выбор %d случайных элементов...", count)
         random_objects = random.sample(filtered_objects, k=count)
-        log.info(
+        log.debug(
             "IDs выбранных объектов: %s",
             [random_object.object_id for random_object in random_objects],
         )

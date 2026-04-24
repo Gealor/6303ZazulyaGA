@@ -14,14 +14,14 @@ async def _save_metadata_in_file(
     data: dict,
     path: Path = config.WORK_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
 ) -> None:
-    log.info("Сохраняю метаданные в %s...", path.as_posix())
+    log.debug("Сохраняю метаданные в %s...", path.as_posix())
     try:
         async with aiofiles.open(path, mode="w", encoding="utf-8") as file:
             await file.write(json.dumps(data, indent=4, ensure_ascii=False))
     except Exception:
         log.warning("Произошла ошибка при сохранении метаданных.", exc_info=True)
     else:
-        log.info("Метаданные успешно сохранены.")
+        log.debug("Метаданные успешно сохранены.")
 
 
 async def _make_request(
@@ -64,7 +64,7 @@ async def make_request_and_save_info(
 async def download_files(
     object_id: str, path: Path, url: str, client_session: aiohttp.ClientSession
 ):
-    log.info("Скачиваем файл с %s в директорию %s...", url, path.as_posix())
+    log.debug("Скачиваем файл с %s в директорию %s...", url, path.as_posix())
     async with client_session.get(url=url) as response:
         response.raise_for_status()
         content = await response.read()
@@ -72,4 +72,4 @@ async def download_files(
     async with aiofiles.open(path, mode="wb") as file:
         await file.write(content)
 
-    log.info("Файл с ID=%s успешно скачан.", object_id)
+    log.debug("Файл с ID=%s успешно скачан.", object_id)

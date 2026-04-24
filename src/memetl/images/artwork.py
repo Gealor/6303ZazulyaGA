@@ -51,7 +51,7 @@ class Artwork(ABC):
             log.error("Не удалось загрузить изображение")
             raise ValueError
 
-        log.info("Форма изображения: %s", _img.shape)
+        log.debug("Форма изображения: %s", _img.shape)
         return _img
 
     @staticmethod

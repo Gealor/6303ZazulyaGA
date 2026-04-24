@@ -12,14 +12,14 @@ def _save_metadata_in_file(
     data: dict,
     path: Path = config.WORK_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
 ) -> None:
-    log.info("Сохраняю метаданные в %s...", path.as_posix())
+    log.debug("Сохраняю метаданные в %s...", path.as_posix())
     try:
         with open(path, mode="w", encoding="utf-8") as file:
             json.dump(data, file, indent=4)
     except Exception:
         log.warning("Произошла ошибка при сохранении метаданных.")
     else:
-        log.info("Метаданные успешно сохранены.")
+        log.debug("Метаданные успешно сохранены.")
 
 
 def make_request(
@@ -48,9 +48,9 @@ def make_request(
 
 
 def download_files(path: Path, url: str):
-    log.info("Скачиваем файл с %s в директорию %s...", url, path.as_posix())
+    log.debug("Скачиваем файл с %s в директорию %s...", url, path.as_posix())
     response = requests.get(url)
     with open(path, mode="wb") as file:
         file.write(response.content)
 
-    log.info("Файл успешно скачан.")
+    log.debug("Файл успешно скачан.")

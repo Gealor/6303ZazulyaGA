@@ -55,7 +55,7 @@ def handle_one_image(file_path: Path, file_dir: Path):
     parts = file_name.split("_")
     id_image = int(parts[0])
     artwork = ArtworkColorful(path=file_path)
-    log.info("[%d] Получено изображение: %s", id_image, artwork)
+    log.debug("[%d] Получено изображение: %s", id_image, artwork)
     image_processor = ImageProcessor(artwork=artwork, save_path=file_dir, id_image=id_image)
     log.info("[%d] Начало обработки изображения %s...", id_image, file_path.stem)
     image_processor.process_artwork()
@@ -115,7 +115,7 @@ async def concurency_pipeline_main(count: int, analyze_file: bool = True, only_a
     # for p in tasks: # ждем завершения ВСЕХ процессов
     #     p.join()
 
-    log.info("Запуск пула процессов для обработки изображений...")
+    log.debug("Запуск пула процессов для обработки изображений...")
     loop = asyncio.get_running_loop()
 
     # Используем ProcessPoolExecutor, т.к по умолчанию использует количество ядер CPU, т.е. не будет проблем с OOM

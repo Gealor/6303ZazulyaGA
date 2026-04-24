@@ -38,7 +38,7 @@ class CSVAsyncFileProcessor(BaseCSVFileProcessor):
 
     async def _clear_folder(self):
         if self.full_path.exists():
-            log.info("Удаление папки %s...", self.full_path.as_posix())
+            log.debug("Удаление папки %s...", self.full_path.as_posix())
             await aioshutil.rmtree(self.full_path)
 
     async def _create_dir(self, path: Path | None = None):
@@ -48,10 +48,10 @@ class CSVAsyncFileProcessor(BaseCSVFileProcessor):
         if path is None:
             path = self.full_path
         if not path.exists():
-            log.info("Создание директории %s...", path.name)
+            log.debug("Создание директории %s...", path.name)
             await aiofiles.os.mkdir(path = path)
         else:
-            log.info("Директория уже создана. Пропускаем...")
+            log.debug("Директория уже создана. Пропускаем...")
 
     async def _get_and_download(self, object_id: str, file_path: Path, dir_path: Path) -> bool:
         metadata_path = dir_path / config.METADATA_FILE
@@ -115,7 +115,7 @@ class CSVAsyncFileProcessor(BaseCSVFileProcessor):
         # Выбираю случайный объект
         log.info("Выбор %d случайных элементов...", count)
         random_objects = random.sample(filtered_objects, k=count)
-        log.info(
+        log.debug(
             "IDs выбранных объектов: %s",
             [random_object.object_id for random_object in random_objects]
         )
