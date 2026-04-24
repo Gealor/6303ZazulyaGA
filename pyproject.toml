@@ -51,5 +51,3 @@ select = ["B", "C", "E", "F", "W", "B9", "I", "SIM"]
 max-line-length = 90
 exclude = [".git", "__pycache__", "docs", ".venv"]
 extend-ignore = ["D", "ANN", "VNE", "I", "W291", "W292", "W391", "E203", "E501"]
-max-complexity = 10
-import-order-style = "pycharm"
