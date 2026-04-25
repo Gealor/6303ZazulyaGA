@@ -14,3 +14,7 @@ class ShapeArtworkColorfulException(BaseArtworkException):
 
 class AddImagesException(BaseArtworkException):
     pass
+
+
+class IncorrectFormatCSVException(Exception):
+    pass
