@@ -9,12 +9,14 @@ import aioshutil
 
 import memetl.config as config
 from memetl.dataclass import MetObject
+from memetl.decorators import async_time_meter_decorator
 from memetl.images.file_processors.csv.base_csv_file_processor import (
     BaseCSVFileProcessor,
 )
 from memetl.images.integrations.async_integration import (
     download_files,
     make_request_and_save_info,
+    semaphore_wrapper,
 )
 from memetl.logger import log
 
@@ -95,7 +97,7 @@ class CSVAsyncFileProcessor(BaseCSVFileProcessor):
 
         log.info("Объект %s обработан.\n", file_name)
 
-
+    @async_time_meter_decorator
     async def start_pipeline(
         self,
         read_file: Path = config.MET_OBJECTS_PATH,
@@ -108,20 +110,11 @@ class CSVAsyncFileProcessor(BaseCSVFileProcessor):
         objects = self.read_file(read_file)
 
         # Фильтрация объектов, по классификации, по умолчанию картинка
-        log.info("Фильтрация данных...")
-        filtered_objects = [
-            elem for elem in objects if elem.classification == classification
-        ]
-        # Выбираю случайный объект
-        log.info("Выбор %d случайных элементов...", count)
-        random_objects = random.sample(filtered_objects, k=count)
-        log.debug(
-            "IDs выбранных объектов: %s",
-            [random_object.object_id for random_object in random_objects]
-        )
+        random_objects = self._select_objects_sample(objects, count, classification)
 
+        semaphore = asyncio.Semaphore(value=config.SEMAPHORE_COUNT)
         list_coros = [
-            self._handle_one_element(index, obj)
+            semaphore_wrapper(self._handle_one_element(index, obj), semaphore)
             for index, obj in enumerate(random_objects, start=1)
         ]
         results = await asyncio.gather(*list_coros)

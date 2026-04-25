@@ -73,17 +73,7 @@ class CSVFileProcessor(BaseCSVFileProcessor):
         objects = self.read_file(read_file)
 
         # Фильтрация объектов, по классификации, по умолчанию картинка
-        log.info("Фильтрация данных...")
-        filtered_objects = [
-            elem for elem in objects if elem.classification == classification
-        ]
-        # Выбираю случайный объект
-        log.info("Выбор %d случайных элементов...", count)
-        random_objects = random.sample(filtered_objects, k=count)
-        log.debug(
-            "IDs выбранных объектов: %s",
-            [random_object.object_id for random_object in random_objects],
-        )
+        random_objects = self._select_objects_sample(objects, count, classification)
         results = []
         for index, obj in enumerate(random_objects, start=1):
             log.info("Обработка объекта #%d с ID = %s", index, obj.object_id)

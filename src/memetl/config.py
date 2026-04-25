@@ -44,3 +44,7 @@ DATEFMT = "%Y-%m-%d %H-%M-%S"
 
 # Defaults
 DEFAULT_IMAGE_NAME = "image"
+
+
+# Async params
+SEMAPHORE_COUNT = 10
