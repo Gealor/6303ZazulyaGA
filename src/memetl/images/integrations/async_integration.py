@@ -1,6 +1,7 @@
+import asyncio
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable
 
 import aiofiles
 import aiohttp
@@ -8,6 +9,11 @@ import aiohttp
 import memetl.config as config
 from memetl.dataclass import ImageObject
 from memetl.logger import log
+
+
+async def semaphore_wrapper(coro: Awaitable, semaphore: asyncio.Semaphore):
+    async with semaphore:
+        return await coro
 
 
 async def _save_metadata_in_file(
