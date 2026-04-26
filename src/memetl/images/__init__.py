@@ -9,4 +9,4 @@ __all__ = (
 
 from .artwork import Artwork, ArtworkColorful, ArtworkGrayscale
 from .file_processors.csv.async_files_processor import CSVAsyncFileProcessor
-from .file_processors.csv.files_processor import CSVFileProcessor
+from .file_processors.csv.sync_files_processor import CSVFileProcessor

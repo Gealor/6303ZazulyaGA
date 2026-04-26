@@ -1,19 +1,17 @@
-import csv
-import os
-import random
+import json
 import shutil
-from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Tuple
 
 import memetl.config as config
-from memetl.dataclass import BaseObject, MetObject
-from memetl.images.file_processors.csv.base_csv_file_processor import BaseCSVFileProcessor
+from memetl.dataclass import MetObject
+from memetl.images.exceptions import IncorrectFormatJSONException
+from memetl.images.file_processors.abstract_file_processor import AbstractFileProcessor
 from memetl.images.integrations.integration import download_files, make_request
 from memetl.logger import log
 
 
-class CSVFileProcessor(BaseCSVFileProcessor):
+class JSONFileProcessor(AbstractFileProcessor):
     def __init__(
         self,
         save_folder: str = config.PAINTINGS_DIR_NAME,
@@ -61,21 +59,10 @@ class CSVFileProcessor(BaseCSVFileProcessor):
         download_files(path=file_path, url=extended_object.primary_image)
         return True
 
-    def start_pipeline(
-        self,
-        read_file: Path = config.MET_OBJECTS_PATH,
-        count: int = 1,
-        classification: str = config.PAINTING_CLASSIFICATION,
-        file_name: str = config.ORIGINAL_IMAGE,
-    ) -> List[Tuple[Path, Path]]:
-        self._clear_folder()
-        self._create_dir()
-        objects = self.read_file(read_file)
-
-        # Фильтрация объектов, по классификации, по умолчанию картинка
-        random_objects = self._select_objects_sample(objects, count, classification)
+    def process_by_object_list(self, objects: list[MetObject]) -> List[Tuple[Path, Path]]:
+        '''Запускает процесс скачивания и получения информации об изображениях по списку'''
         results = []
-        for index, obj in enumerate(random_objects, start=1):
+        for index, obj in enumerate(objects, start=1):
             log.info("Обработка объекта #%d с ID = %s", index, obj.object_id)
             file_name, dir_name = (
                 f"{index}_{obj.object_id}_{config.ORIGINAL_IMAGE}",
@@ -95,3 +82,42 @@ class CSVFileProcessor(BaseCSVFileProcessor):
             log.info("Объект %s обработан.\n", file_name)
 
         return results
+
+
+    def read_file(self, file: Path | str = config.MET_OBJECTS_PATH) -> list[MetObject]:
+        """
+        Чтение .json файла и получение всех объектов с их идентификаторами и классификациями(классами)
+        """
+        result = []
+        log.info("Чтение .json файла...")
+        with open(file, mode="r", encoding="utf-8") as f:
+            data = json.load(f)
+
+            for row in data:
+                try:
+                    obj = MetObject(
+                        object_id=row["object_id"],
+                        classification=row["classification"],
+                    )
+                    result.append(obj)
+                except KeyError as e:
+                    log.warning("Ошибка при доступе к аттрибуту: %s", e)
+                    raise IncorrectFormatJSONException from KeyError
+        log.info("Файл прочитан успешно.")
+        return result
+
+    def start_pipeline(
+        self,
+        read_file: Path = config.MET_OBJECTS_PATH,
+        count: int = 1,
+        classification: str = config.PAINTING_CLASSIFICATION,
+        file_name: str = config.ORIGINAL_IMAGE,
+    ) -> List[Tuple[Path, Path]]:
+        self._clear_folder()
+        self._create_dir()
+        objects = self.read_file(read_file)
+
+        # Фильтрация объектов, по классификации, по умолчанию картинка
+        random_objects = self.select_objects_sample(objects, count, classification)
+
+        return self.process_by_object_list(random_objects)

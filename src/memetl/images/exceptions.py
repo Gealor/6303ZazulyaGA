@@ -1,3 +1,4 @@
+# Artwork Exceptions
 class BaseArtworkException(Exception):
     pass
 
@@ -16,5 +17,17 @@ class AddImagesException(BaseArtworkException):
     pass
 
 
-class IncorrectFormatCSVException(Exception):
+
+# Read file Exceptions
+
+class BaseReadFileException(Exception):
     pass
+
+
+class IncorrectFormatCSVException(BaseReadFileException):
+    pass
+
+
+class IncorrectFormatJSONException(BaseReadFileException):
+    pass
+

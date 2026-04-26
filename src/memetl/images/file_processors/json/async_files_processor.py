@@ -1,5 +1,5 @@
 import asyncio
-import csv
+import json
 from pathlib import Path
 from typing import List, Tuple
 
@@ -10,7 +10,7 @@ import aioshutil
 import memetl.config as config
 from memetl.dataclass import MetObject
 from memetl.decorators import async_time_meter_decorator
-from memetl.images.exceptions import IncorrectFormatCSVException
+from memetl.images.exceptions import IncorrectFormatJSONException
 from memetl.images.file_processors.abstract_file_processor import (
     AbstractAsyncFileProcessor,
 )
@@ -22,7 +22,7 @@ from memetl.images.integrations.async_integration import (
 from memetl.logger import log
 
 
-class CSVAsyncFileProcessor(AbstractAsyncFileProcessor):
+class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
     def __init__(
         self,
         client_session: aiohttp.ClientSession,
@@ -111,34 +111,33 @@ class CSVAsyncFileProcessor(AbstractAsyncFileProcessor):
 
     async def read_file(self, file: Path | str = config.MET_OBJECTS_PATH) -> list[MetObject]:
         """
-        Чтение .csv файла и получение всех объектов с их идентификаторами и классификациями(классами)
+        Чтение .json файла и получение всех объектов с их идентификаторами и классификациями(классами)
         """
         result = []
-        log.info("Чтение .csv файла...")
+        log.info("Чтение .json файла...")
         try:
-            async with aiofiles.open(file, mode="r", encoding="utf-8-sig") as f:
+            async with aiofiles.open(file, mode="r", encoding="utf-8") as f:
                 content = await f.read()
         except Exception as e:
-            log.error("Ошибка при чтении csv файла: %s", e)
+            log.error("Ошибка при чтении json файла: %s", e)
             raise
 
         try:
-            csv_reader = csv.DictReader(content.splitlines())
+            data = json.loads(content)
         except Exception as e:
-            log.error("Ошибка при парсинге csv: %s", e)
+            log.error("Ошибка при парсинге json: %s", e)
             raise
 
-        for row in csv_reader:
+        for row in data:
             try:
-                if row["Is Public Domain"] == "True":
-                    obj = MetObject(
-                        object_id=row["Object ID"],
-                        classification=row["Classification"],
-                    )
-                    result.append(obj)
+                obj = MetObject(
+                    object_id=row["object_id"],
+                    classification=row["classification"],
+                )
+                result.append(obj)
             except KeyError as e:
                 log.warning("Ошибка при доступе к аттрибуту: %s", e)
-                raise IncorrectFormatCSVException from e
+                raise IncorrectFormatJSONException from e
 
         log.info("Файл прочитан успешно.")
         return result
@@ -157,6 +156,4 @@ class CSVAsyncFileProcessor(AbstractAsyncFileProcessor):
         # Фильтрация объектов, по классификации, по умолчанию картинка
         random_objects = self.select_objects_sample(objects, count, classification)
 
-
         return await self.process_by_object_list(random_objects)
-
