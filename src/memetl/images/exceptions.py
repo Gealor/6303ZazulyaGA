@@ -17,8 +17,8 @@ class AddImagesException(BaseArtworkException):
     pass
 
 
-
 # Read file Exceptions
+
 
 class BaseReadFileException(Exception):
     pass
@@ -30,4 +30,3 @@ class IncorrectFormatCSVException(BaseReadFileException):
 
 class IncorrectFormatJSONException(BaseReadFileException):
     pass
-

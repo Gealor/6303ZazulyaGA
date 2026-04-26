@@ -23,16 +23,15 @@ class AbstractFileProcessor(ABC):
     ) -> List[Tuple[Path, Path]]:
         pass
 
-
     def select_objects_sample(
         self,
         objects: list[MetObject],
         count: int,
         classification: str = config.PAINTING_CLASSIFICATION,
     ) -> list[MetObject]:
-        '''
+        """
         Фильтрация и составление выборки объектов, по классификации, по умолчанию картинка
-        '''
+        """
         log.info("Фильтрация данных...")
         filtered_objects = [
             elem for elem in objects if elem.classification == classification
@@ -42,7 +41,7 @@ class AbstractFileProcessor(ABC):
         random_objects = random.sample(filtered_objects, k=count)
         log.debug(
             "IDs выбранных объектов: %s",
-            [random_object.object_id for random_object in random_objects]
+            [random_object.object_id for random_object in random_objects],
         )
 
         return random_objects
@@ -65,9 +64,9 @@ class AbstractAsyncFileProcessor(ABC):
         count: int,
         classification: str = config.PAINTING_CLASSIFICATION,
     ) -> list[MetObject]:
-        '''
+        """
         Фильтрация и составление выборки объектов, по классификации, по умолчанию картинка
-        '''
+        """
         log.info("Фильтрация данных...")
         filtered_objects = [
             elem for elem in objects if elem.classification == classification
@@ -77,7 +76,7 @@ class AbstractAsyncFileProcessor(ABC):
         random_objects = random.sample(filtered_objects, k=count)
         log.debug(
             "IDs выбранных объектов: %s",
-            [random_object.object_id for random_object in random_objects]
+            [random_object.object_id for random_object in random_objects],
         )
 
         return random_objects

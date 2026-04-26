@@ -22,7 +22,9 @@ async def concurency_pipeline(input: Path, output: Path):
     log.info("=== Параллельная обработка данных ===")
     output_folder = output.name
     async with aiohttp.ClientSession() as session:
-        file_processor = JSONAsyncFileProcessor(client_session=session, save_folder=output_folder)
+        file_processor = JSONAsyncFileProcessor(
+            client_session=session, save_folder=output_folder
+        )
         log.info("Начало подготовки данных...")
         await file_processor._clear_folder()
         await file_processor._create_dir()
@@ -50,6 +52,7 @@ async def concurency_pipeline(input: Path, output: Path):
         # При этом сам Event Loop не блокируется.
         await asyncio.gather(*processing_tasks)
 
+
 def sync_pipeline(input: Path, output: Path):
     output_folder = output.name
     log.info("=== Синхронная обработка данных ===")
@@ -70,15 +73,20 @@ def sync_pipeline(input: Path, output: Path):
 
 @click.group()
 def memetl():
-    '''
+    """
     Консольный интерфейс для чтения MetObjects.csv файла, скачивания информации об изображениях и их обработке.
 
     Выполнил: Зазуля Георгий Алексеевич
     Группа: 6303-010302D
-    '''
+    """
+
 
 @memetl.command()
-@click.option("--num", default=1, help="Количество изображений, которое необходимо записать. Выберет случайные num элементов. По умолчанию 1.")
+@click.option(
+    "--num",
+    default=1,
+    help="Количество изображений, которое необходимо записать. Выберет случайные num элементов. По умолчанию 1.",
+)
 @click.option(
     "--data",
     default=config.MET_OBJECTS_PATH,
@@ -92,9 +100,9 @@ def memetl():
     help="Путь до файла, куда необходимо сохранить метаданные об изображениях",
 )
 def prepare(num: int, data: Path, output: Path):
-    '''
+    """
     Подготавливает .json файл с информацией о выбранных изображениях
-    '''
+    """
     if not data.is_absolute():
         data = config.WORK_DIR / data
     if not output.is_absolute():
@@ -108,14 +116,12 @@ def prepare(num: int, data: Path, output: Path):
             file_processor = CSVAsyncFileProcessor(
                 client_session=session,
             )
-            objects = await file_processor.read_file(file = data)
+            objects = await file_processor.read_file(file=data)
             random_objects = file_processor.select_objects_sample(objects, num)
             dict_objects = [asdict(obj) for obj in random_objects]
             await _save_metadata_in_file(data=dict_objects, path=output)
 
-    asyncio.run(
-        read_file_and_save_metadata(num=num, data=data, output=output)
-    )
+    asyncio.run(read_file_and_save_metadata(num=num, data=data, output=output))
 
 
 @memetl.command()
@@ -124,8 +130,8 @@ def prepare(num: int, data: Path, output: Path):
     required=True,
     type=click.Path(path_type=Path),
     help=(
-        "Путь до .json файла откуда прочитать информацию об изображениях. " \
-        "По умолчанию файл внутри пакета." \
+        "Путь до .json файла откуда прочитать информацию об изображениях. "
+        "По умолчанию файл внутри пакета."
         "Замечание: Нужно подготовить файл с информацией о выбранных изображениях, для этого воспользуйтесь инструментом memetl prepare."
     ),
 )
@@ -136,11 +142,16 @@ def prepare(num: int, data: Path, output: Path):
     type=click.Path(path_type=Path),
     help="Путь до папки для скачанных и обработанных файлов",
 )
-@click.option("--parallel", is_flag=True, default=False, help="Включить режим параллельного скачивания и обработки. По умолчанию False.")
+@click.option(
+    "--parallel",
+    is_flag=True,
+    default=False,
+    help="Включить режим параллельного скачивания и обработки. По умолчанию False.",
+)
 def process(input: Path, output: Path, parallel: bool):
-    '''
+    """
     Скачивает и обрабатывает изображения
-    '''
+    """
     if not input.is_absolute():
         input = config.WORK_DIR / input
     if not output.is_absolute():
@@ -166,14 +177,14 @@ def process(input: Path, output: Path, parallel: bool):
     help="Путь до папки, куда сохранять результаты анализа.",
 )
 def analyze(csv: Path, output: Path):
-    '''
+    """
     Анализ MetObjects.csv файла согласно варианту:
         Вариант 4. Анализ продолжительности процесса создания объектов
             1. Для топ-10 самых часто встречающихся материалов (Medium) найти среднюю продолжительность процесса создания объекта
         (Object Begin Date и Object End Date), 95% доверительный интервал и 95% интервал рассеяния. Построить столбцовую диаграмму.
             2. Для материала с наибольшим средним сроком создания объекта
         построить график изменения этого срока во времени, со скользящим средним.
-    '''
+    """
     if not csv.is_absolute():
         csv = config.WORK_DIR / csv
     if not output.is_absolute():
@@ -181,10 +192,5 @@ def analyze(csv: Path, output: Path):
     run_full_analysis(file_path=csv, output_folder=output)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     memetl()
-
-
-
-
-

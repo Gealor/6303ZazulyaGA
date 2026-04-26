@@ -33,11 +33,9 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
         self.base_dir = base_dir
         self.client_session = client_session
 
-
     @property
     def full_path(self):
         return self.base_dir / self.save_folder
-
 
     async def _clear_folder(self):
         if self.full_path.exists():
@@ -52,11 +50,13 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
             path = self.full_path
         if not path.exists():
             log.debug("Создание директории %s...", path.name)
-            await aiofiles.os.mkdir(path = path)
+            await aiofiles.os.mkdir(path=path)
         else:
             log.debug("Директория уже создана. Пропускаем...")
 
-    async def _get_and_download(self, object_id: str, file_path: Path, dir_path: Path) -> bool:
+    async def _get_and_download(
+        self, object_id: str, file_path: Path, dir_path: Path
+    ) -> bool:
         metadata_path = dir_path / config.METADATA_FILE
         extended_object = await make_request_and_save_info(
             object_id,
@@ -78,8 +78,9 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
         )
         return True
 
-
-    async def _handle_one_element(self, index: int, obj: MetObject) -> Tuple[Path, Path] | None:
+    async def _handle_one_element(
+        self, index: int, obj: MetObject
+    ) -> Tuple[Path, Path] | None:
         log.info("Обработка объекта #%d с ID = %s", index, obj.object_id)
         file_name, dir_name = (
             f"{index}_{obj.object_id}_{config.ORIGINAL_IMAGE}",
@@ -87,7 +88,7 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
         )
         dir_path = self.full_path / dir_name
         file_path = dir_path / file_name
-        await self._create_dir(path = dir_path)
+        await self._create_dir(path=dir_path)
         success_download = await self._get_and_download(
             object_id=obj.object_id,
             file_path=file_path,
@@ -98,8 +99,10 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
 
         log.info("Объект %s обработан.\n", file_name)
 
-    async def process_by_object_list(self, objects: list[MetObject]) -> List[Tuple[Path, Path]]:
-        '''Запускает процесс скачивания и получения информации об изображениях по списку'''
+    async def process_by_object_list(
+        self, objects: list[MetObject]
+    ) -> List[Tuple[Path, Path]]:
+        """Запускает процесс скачивания и получения информации об изображениях по списку"""
         await self._clear_folder()
         await self._create_dir()
         semaphore = asyncio.Semaphore(value=config.SEMAPHORE_COUNT)
@@ -110,8 +113,9 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
         results = await asyncio.gather(*list_coros)
         return [result for result in results if result is not None]
 
-
-    async def read_file(self, file: Path | str = config.MET_OBJECTS_PATH) -> list[MetObject]:
+    async def read_file(
+        self, file: Path | str = config.MET_OBJECTS_PATH
+    ) -> list[MetObject]:
         """
         Чтение .json файла и получение всех объектов с их идентификаторами и классификациями(классами)
         """

@@ -20,7 +20,9 @@ async def _save_metadata_in_file(
     data: dict[str, Any] | list[dict[str, Any]],
     path: Path | str = config.WORK_DIR / config.PAINTINGS_DIR_NAME / config.METADATA_FILE,
 ) -> None:
-    log.debug("Сохраняю метаданные в %s...", path.as_posix() if isinstance(path, Path) else path)
+    log.debug(
+        "Сохраняю метаданные в %s...", path.as_posix() if isinstance(path, Path) else path
+    )
     try:
         async with aiofiles.open(path, mode="w", encoding="utf-8") as file:
             await file.write(json.dumps(data, indent=4, ensure_ascii=False))

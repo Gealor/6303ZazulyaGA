@@ -60,7 +60,7 @@ class CSVFileProcessor(AbstractFileProcessor):
         return True
 
     def process_by_object_list(self, objects: list[MetObject]) -> List[Tuple[Path, Path]]:
-        '''Запускает процесс скачивания и получения информации об изображениях по списку'''
+        """Запускает процесс скачивания и получения информации об изображениях по списку"""
         self._clear_folder()
         self._create_dir()
         results = []
@@ -85,14 +85,15 @@ class CSVFileProcessor(AbstractFileProcessor):
 
         return results
 
-
     def read_file(self, file: Path | str = config.MET_OBJECTS_PATH) -> list[MetObject]:
         """
         Чтение .csv файла и получение всех объектов с их идентификаторами и классификациями(классами)
         """
         result = []
         log.info("Чтение .csv файла...")
-        with open(file, mode="r", encoding="utf-8-sig") as f:  # sig, чтобы убрать \ufeff символ
+        with open(
+            file, mode="r", encoding="utf-8-sig"
+        ) as f:  # sig, чтобы убрать \ufeff символ
             try:
                 csv_reader = csv.DictReader(f)
             except Exception as e:

@@ -11,17 +11,21 @@ def setup_logger(name: str) -> logging.Logger:
 
     file_handler = logging.FileHandler(config.LOG_DIR_PATH / "app.log", encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(
-        fmt="%(asctime)s  %(levelname)-8s  %(filename)s:%(lineno)d  %(message)s",
-        datefmt=config.DATEFMT,
-    ))
+    file_handler.setFormatter(
+        logging.Formatter(
+            fmt="%(asctime)s  %(levelname)-8s  %(filename)s:%(lineno)d  %(message)s",
+            datefmt=config.DATEFMT,
+        )
+    )
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(logging.Formatter(
-        fmt=config.FORMAT,
-        datefmt=config.DATEFMT,
-    ))
+    console_handler.setFormatter(
+        logging.Formatter(
+            fmt=config.FORMAT,
+            datefmt=config.DATEFMT,
+        )
+    )
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)

@@ -60,7 +60,7 @@ class JSONFileProcessor(AbstractFileProcessor):
         return True
 
     def process_by_object_list(self, objects: list[MetObject]) -> List[Tuple[Path, Path]]:
-        '''Запускает процесс скачивания и получения информации об изображениях по списку'''
+        """Запускает процесс скачивания и получения информации об изображениях по списку"""
         self._clear_folder()
         self._create_dir()
         results = []
@@ -84,7 +84,6 @@ class JSONFileProcessor(AbstractFileProcessor):
             log.info("Объект %s обработан.\n", file_name)
 
         return results
-
 
     def read_file(self, file: Path | str = config.MET_OBJECTS_PATH) -> list[MetObject]:
         """

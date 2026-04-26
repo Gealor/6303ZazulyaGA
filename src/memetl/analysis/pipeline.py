@@ -133,4 +133,6 @@ def run_full_analysis(
     )
     if isinstance(output_folder, str):
         output_folder = Path(output_folder)
-    plot_graphs(stats_df, leader_timeline, max_duration_medium, output_folder=output_folder)
+    plot_graphs(
+        stats_df, leader_timeline, max_duration_medium, output_folder=output_folder
+    )
