@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -10,6 +12,7 @@ def plot_graphs(
     timeline_df: pd.DataFrame,
     max_duration_medium: int | str,
     show_plots: bool = False,
+    output_folder: Path = config.ANALYSIS_RESULTS_PATH,
 ):
     log.info("Построение графиков...\n")
     log.info("Построение столбцовой диаграммы...")
@@ -42,8 +45,8 @@ def plot_graphs(
     plt.title("Топ-10 материалов: время создания")
     plt.xticks(rotation=45, ha="right")
     plt.legend()
-    config.ANALYSIS_RESULTS_PATH.mkdir(exist_ok=True)
-    plt.savefig(config.BAR_FIG_PATH)
+    output_folder.mkdir(exist_ok=True)
+    plt.savefig(output_folder / config.BAR_FIG_NAME)
     if show_plots:
         plt.show()
 
@@ -67,6 +70,6 @@ def plot_graphs(
     plt.ylabel("Продолжительность (лет)")
     plt.legend()
     plt.tight_layout()  # автоматически настраивает отступы между элементами
-    plt.savefig(config.SLIDE_WINDOW_PATH)
+    plt.savefig(output_folder / config.SLIDE_WINDOW_NAME)
     if show_plots:
         plt.show()

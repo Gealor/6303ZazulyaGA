@@ -100,6 +100,8 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
 
     async def process_by_object_list(self, objects: list[MetObject]) -> List[Tuple[Path, Path]]:
         '''Запускает процесс скачивания и получения информации об изображениях по списку'''
+        await self._clear_folder()
+        await self._create_dir()
         semaphore = asyncio.Semaphore(value=config.SEMAPHORE_COUNT)
         list_coros = [
             semaphore_wrapper(self._handle_one_element(index, obj), semaphore)
@@ -149,8 +151,6 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
         count: int = 1,
         classification: str = config.PAINTING_CLASSIFICATION,
     ) -> List[Tuple[Path, Path]]:
-        await self._clear_folder()
-        await self._create_dir()
         objects = await self.read_file(read_file)
 
         # Фильтрация объектов, по классификации, по умолчанию картинка

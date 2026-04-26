@@ -61,6 +61,8 @@ class CSVFileProcessor(AbstractFileProcessor):
 
     def process_by_object_list(self, objects: list[MetObject]) -> List[Tuple[Path, Path]]:
         '''Запускает процесс скачивания и получения информации об изображениях по списку'''
+        self._clear_folder()
+        self._create_dir()
         results = []
         for index, obj in enumerate(objects, start=1):
             log.info("Обработка объекта #%d с ID = %s", index, obj.object_id)
@@ -118,8 +120,6 @@ class CSVFileProcessor(AbstractFileProcessor):
         classification: str = config.PAINTING_CLASSIFICATION,
         file_name: str = config.ORIGINAL_IMAGE,
     ) -> List[Tuple[Path, Path]]:
-        self._clear_folder()
-        self._create_dir()
         objects = self.read_file(read_file)
 
         # Фильтрация объектов, по классификации, по умолчанию картинка

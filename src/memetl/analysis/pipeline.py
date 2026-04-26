@@ -6,7 +6,7 @@ import pandas as pd
 
 from memetl.analysis.generators import process_chunks, read_chunks, summarize_chunks
 from memetl.analysis.visualize_and_plot import plot_graphs
-from memetl.config import MET_OBJECTS_PATH
+from memetl.config import ANALYSIS_RESULTS_PATH, MET_OBJECTS_PATH
 from memetl.logger import log
 
 
@@ -74,7 +74,10 @@ def analyze_file(
 
 
 def run_full_analysis(
-    file_path: Path | str = MET_OBJECTS_PATH, top_n: int = 10, size_window: int = 20
+    file_path: Path | str = MET_OBJECTS_PATH,
+    output_folder: Path | str = ANALYSIS_RESULTS_PATH,
+    top_n: int = 10,
+    size_window: int = 20,
 ):
     """Запуск пайплайна обработки MetObjects.csv файла.
 
@@ -128,4 +131,6 @@ def run_full_analysis(
     leader_timeline["Rolling_Mean"] = (
         leader_timeline["Duration"].rolling(size_window, min_periods=1).mean()
     )
-    plot_graphs(stats_df, leader_timeline, max_duration_medium)
+    if isinstance(output_folder, str):
+        output_folder = Path(output_folder)
+    plot_graphs(stats_df, leader_timeline, max_duration_medium, output_folder=output_folder)
