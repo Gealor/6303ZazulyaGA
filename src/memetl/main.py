@@ -6,6 +6,7 @@ from typing import Literal
 
 import aiohttp
 
+from memetl import config
 from memetl.analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
 from memetl.argparser import prepare_argparser
 from memetl.decorators import async_time_meter_decorator, time_meter_decorator
@@ -51,7 +52,15 @@ def analyze_csv(version: Literal["old", "new"]):
 
 
 @time_meter_decorator
-def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool = True):
+def sync_pipeline_main(
+    file_path : str | Path,
+    count: int,
+    analyze_file: bool = True,
+    only_analize: bool = True
+):
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
     if analyze_file:
         log.info("Начало аналитики...")
         analyze_csv("new")
@@ -62,7 +71,7 @@ def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool
     file_processor = CSVFileProcessor()
     log.info("=== Синхронная обработка данных ===")
     log.info("Начало подготовки данных...")
-    list_paths = file_processor.start_pipeline(count=count)
+    list_paths = file_processor.start_pipeline(read_file=file_path, count=count)
     if not list_paths:
         log.info("Нет данных для обработки.")
         return
@@ -76,8 +85,14 @@ def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool
 
 @async_time_meter_decorator
 async def concurency_pipeline_main(
-    count: int, analyze_file: bool = True, only_analize: bool = True
+    file_path : str | Path,
+    count: int,
+    analyze_file: bool = True,
+    only_analize: bool = True,
 ):
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
     if analyze_file:
         log.info("Начало аналитики...")
         analyze_csv("new")
@@ -89,7 +104,7 @@ async def concurency_pipeline_main(
     async with aiohttp.ClientSession() as session:
         file_processor = CSVAsyncFileProcessor(client_session=session)
         log.info("Начало подготовки данных...")
-        list_paths = await file_processor.start_pipeline(count=count)
+        list_paths = await file_processor.start_pipeline(read_file=file_path, count=count)
 
     if not list_paths:
         log.info("Нет данных для обработки.")
@@ -129,6 +144,7 @@ if __name__ == "__main__":
     if args.parallel:
         asyncio.run(
             concurency_pipeline_main(
+                file_path=config.MET_OBJECTS_PATH,
                 count=args.count,
                 analyze_file=args.analyze_file,
                 only_analize=args.only_analyze,
@@ -136,6 +152,7 @@ if __name__ == "__main__":
         )
     else:
         sync_pipeline_main(
+            file_path=config.MET_OBJECTS_PATH,
             count=args.count,
             analyze_file=args.analyze_file,
             only_analize=args.only_analyze,

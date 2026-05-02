@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "memetl"
-version = "0.1.0"
+name = "memetl-zazulya6303"
+version = "0.1.2"
 description = "Metadata Extraction and Analysis Tool"
 requires-python = ">=3.10"
 dependencies = [
@@ -14,10 +14,15 @@ dependencies = [
     "aiofiles",
     "aioshutil",
     "click",
+    "pandas",
+    "numpy",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "twine",
+    "build",
     "ruff",
     "flake8",
     "flake8-builtins",
