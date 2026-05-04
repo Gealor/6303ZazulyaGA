@@ -103,10 +103,10 @@ def memetl():
 def prepare(num: int, data: Path, output: Path):
     """
     Подготавливает .json файл с информацией о выбранных изображениях
-    """ 
+    """
     if not data.exists():
         raise FileNotFoundException(data)
-    
+
     if not data.is_absolute():
         data = config.WORK_DIR / data
 
