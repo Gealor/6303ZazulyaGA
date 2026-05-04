@@ -10,7 +10,7 @@ import aioshutil
 import memetl.config as config
 from memetl.dataclass import MetObject
 from memetl.decorators import async_time_meter_decorator
-from memetl.images.exceptions import IncorrectFormatCSVException
+from memetl.exceptions.files import IncorrectFormatCSVException
 from memetl.images.file_processors.abstract_file_processor import (
     AbstractAsyncFileProcessor,
 )

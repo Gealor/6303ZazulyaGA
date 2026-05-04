@@ -1,4 +1,3 @@
-# Artwork Exceptions
 class BaseArtworkException(Exception):
     pass
 
@@ -14,19 +13,4 @@ class ShapeArtworkColorfulException(BaseArtworkException):
 
 
 class AddImagesException(BaseArtworkException):
-    pass
-
-
-# Read file Exceptions
-
-
-class BaseReadFileException(Exception):
-    pass
-
-
-class IncorrectFormatCSVException(BaseReadFileException):
-    pass
-
-
-class IncorrectFormatJSONException(BaseReadFileException):
     pass

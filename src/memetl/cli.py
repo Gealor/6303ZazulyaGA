@@ -8,6 +8,7 @@ import click
 
 from memetl import config
 from memetl.analysis.pipeline import run_full_analysis
+from memetl.exceptions.files import FileNotFoundException
 from memetl.images.file_processors.csv.async_files_processor import CSVAsyncFileProcessor
 from memetl.images.file_processors.json.async_files_processor import (
     JSONAsyncFileProcessor,
@@ -91,7 +92,7 @@ def memetl():
     "--data",
     default=config.MET_OBJECTS_PATH,
     type=click.Path(path_type=Path),
-    help="Путь до .csv файла. По умолчанию файл внутри пакета",
+    help="Путь до .csv файла.",
 )
 @click.option(
     "--output",
@@ -102,9 +103,13 @@ def memetl():
 def prepare(num: int, data: Path, output: Path):
     """
     Подготавливает .json файл с информацией о выбранных изображениях
-    """
+    """ 
+    if not data.exists():
+        raise FileNotFoundException(data)
+    
     if not data.is_absolute():
         data = config.WORK_DIR / data
+
     if not output.is_absolute():
         output = config.WORK_DIR / output
 
@@ -131,7 +136,6 @@ def prepare(num: int, data: Path, output: Path):
     type=click.Path(path_type=Path),
     help=(
         "Путь до .json файла откуда прочитать информацию об изображениях. "
-        "По умолчанию файл внутри пакета."
         "Замечание: Нужно подготовить файл с информацией о выбранных изображениях, для этого воспользуйтесь инструментом memetl prepare."
     ),
 )
@@ -152,6 +156,9 @@ def process(input: Path, output: Path, parallel: bool):
     """
     Скачивает и обрабатывает изображения
     """
+    if not input.exists():
+        raise FileNotFoundException(input)
+
     if not input.is_absolute():
         input = config.WORK_DIR / input
     if not output.is_absolute():
@@ -168,7 +175,7 @@ def process(input: Path, output: Path, parallel: bool):
     "--csv",
     default=config.MET_OBJECTS_PATH,
     type=click.Path(path_type=Path),
-    help="Путь до MetObjects.csv файла. По умолчанию файл внутри пакета",
+    help="Путь до MetObjects.csv файла.",
 )
 @click.option(
     "--output",
@@ -185,6 +192,9 @@ def analyze(csv: Path, output: Path):
             2. Для материала с наибольшим средним сроком создания объекта
         построить график изменения этого срока во времени, со скользящим средним.
     """
+    if not csv.exists():
+        raise FileNotFoundException(csv)
+
     if not csv.is_absolute():
         csv = config.WORK_DIR / csv
     if not output.is_absolute():

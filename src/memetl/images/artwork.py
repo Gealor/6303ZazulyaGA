@@ -10,7 +10,7 @@ import numpy as np
 
 import memetl.config as config
 from memetl.decorators import time_meter_decorator
-from memetl.images.exceptions import (
+from memetl.exceptions.images import (
     AddImagesException,
     ConstructorArtworkException,
     ShapeArtworkColorfulException,

@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 import memetl.config as config
 from memetl.dataclass import MetObject
-from memetl.images.exceptions import IncorrectFormatJSONException
+from memetl.exceptions.files import IncorrectFormatJSONException
 from memetl.images.file_processors.abstract_file_processor import AbstractFileProcessor
 from memetl.images.integrations.integration import download_files, make_request
 from memetl.logger import log
