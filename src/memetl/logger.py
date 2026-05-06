@@ -1,15 +1,25 @@
 import logging
 from datetime import datetime
+import os
 
 import memetl.config as config
 
+if "APP_LOG_TIMESTAMP" not in os.environ:
+    os.environ["APP_LOG_TIMESTAMP"] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 def setup_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
+
+    if logger.hasHandlers():
+        return logger
+
     logger.setLevel(logging.DEBUG)  # минимальный уровень для логгера
     config.LOG_DIR_PATH.mkdir(exist_ok=True)
 
-    file_handler = logging.FileHandler(config.LOG_DIR_PATH / "app.log", encoding="utf-8")
+    timestamp = os.environ["APP_LOG_TIMESTAMP"]
+    log_filename = f"{timestamp}_app.log"
+
+    file_handler = logging.FileHandler(config.LOG_DIR_PATH / log_filename, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(
         logging.Formatter(

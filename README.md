@@ -32,10 +32,10 @@ python -m twine upload --repository testpypi dist/* --verbose
 
 Надо будет ввести API-токен В ТОЧНОСТИ как он представлен на сайте TestPyPI
 
-https://test.pypi.org/project/memetl-zazulya6303/0.1.3/
+https://test.pypi.org/project/memetl-zazulya6303/0.2.2/
 
 5. После этого можно скачать пакет с тестового индекса
 
 ```cli
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ memetl-zazulya6303==0.1.2
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ memetl-zazulya6303==0.2.2
 ```

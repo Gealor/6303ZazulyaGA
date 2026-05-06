@@ -8,6 +8,7 @@ import click
 
 from memetl import config
 from memetl.analysis.pipeline import run_full_analysis
+from memetl.decorators import async_time_meter_decorator, time_meter_decorator
 from memetl.exceptions.files import FileNotFoundException
 from memetl.images.file_processors.csv.async_files_processor import CSVAsyncFileProcessor
 from memetl.images.file_processors.json.async_files_processor import (
@@ -18,7 +19,7 @@ from memetl.images.handlers import handle_one_image
 from memetl.images.integrations.async_integration import _save_metadata_in_file
 from memetl.logger import log
 
-
+@async_time_meter_decorator
 async def concurency_pipeline(input: Path, output: Path):
     log.info("=== Параллельная обработка данных ===")
     output_folder = output.name
@@ -53,7 +54,7 @@ async def concurency_pipeline(input: Path, output: Path):
         # При этом сам Event Loop не блокируется.
         await asyncio.gather(*processing_tasks)
 
-
+@time_meter_decorator
 def sync_pipeline(input: Path, output: Path):
     output_folder = output.name
     log.info("=== Синхронная обработка данных ===")
@@ -92,13 +93,13 @@ def memetl():
     "--data",
     default=config.MET_OBJECTS_PATH,
     type=click.Path(path_type=Path),
-    help="Путь до .csv файла.",
+    help="Путь до .csv файла, относительно рабочей директории, откуда запускается интерфейс.",
 )
 @click.option(
     "--output",
     required=True,
     type=click.Path(path_type=Path),
-    help="Путь до файла, куда необходимо сохранить метаданные об изображениях",
+    help="Путь до файла, куда необходимо сохранить метаданные об изображениях, относительно рабочей директории, откуда запускается интерфейс.",
 )
 def prepare(num: int, data: Path, output: Path):
     """
@@ -135,7 +136,7 @@ def prepare(num: int, data: Path, output: Path):
     required=True,
     type=click.Path(path_type=Path),
     help=(
-        "Путь до .json файла откуда прочитать информацию об изображениях. "
+        "Путь до .json файла откуда прочитать информацию об изображениях, относительно рабочей директории, откуда запускается интерфейс."
         "Замечание: Нужно подготовить файл с информацией о выбранных изображениях, для этого воспользуйтесь инструментом memetl prepare."
     ),
 )
@@ -144,7 +145,7 @@ def prepare(num: int, data: Path, output: Path):
     required=True,
     default=config.PAINTINGS_DIR,
     type=click.Path(path_type=Path),
-    help="Путь до папки для скачанных и обработанных файлов",
+    help="Путь до папки для скачанных и обработанных файлов, относительно рабочей директории, откуда запускается интерфейс.",
 )
 @click.option(
     "--parallel",
