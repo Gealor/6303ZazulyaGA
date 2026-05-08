@@ -37,4 +37,3 @@ class CSVFileProcessor(AbstractFileProcessor):
                     raise IncorrectFormatCSVException from KeyError
         log.info("Файл прочитан успешно.")
         return result
-

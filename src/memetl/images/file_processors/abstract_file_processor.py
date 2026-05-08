@@ -12,8 +12,15 @@ import aioshutil
 import memetl.config as config
 from memetl.dataclass import BaseObject, MetObject
 from memetl.decorators import async_time_meter_decorator
-from memetl.images.integrations.async_integration import make_request_and_save_info, download_files as async_download_files, semaphore_wrapper
-from memetl.images.integrations.integration import make_request, download_files as sync_download_files
+from memetl.images.integrations.async_integration import (
+    make_request_and_save_info,
+    download_files as async_download_files,
+    semaphore_wrapper,
+)
+from memetl.images.integrations.integration import (
+    make_request,
+    download_files as sync_download_files,
+)
 from memetl.logger import log
 
 
@@ -25,7 +32,7 @@ class AbstractFileProcessor(ABC):
     ):
         self.save_folder = save_folder
         self.base_dir = base_dir
-    
+
     @property
     def full_path(self):
         return self.base_dir / self.save_folder
@@ -44,10 +51,9 @@ class AbstractFileProcessor(ABC):
         objects = self.read_file(read_file)
 
         # Фильтрация объектов, по классификации, по умолчанию картинка
-        random_objects = self.select_objects_sample(objects, count, classification) # type: ignore
+        random_objects = self.select_objects_sample(objects, count, classification)  # type: ignore
 
         return self.process_by_object_list(random_objects)
-
 
     def select_objects_sample(
         self,
@@ -71,7 +77,7 @@ class AbstractFileProcessor(ABC):
         )
 
         return random_objects
-    
+
     def _clear_folder(self):
         # Получаем абсолютные пути, чтобы раскрыть любые симлинки или "..", "."
         target_path = self.full_path.resolve()
@@ -88,7 +94,7 @@ class AbstractFileProcessor(ABC):
         if target_path == base_path:
             log.critical("Попытка удалить базовую рабочую директорию: %s", target_path)
             raise PermissionError("Нельзя удалять базовую директорию!")
-        
+
         if target_path.exists():
             log.debug("Удаление папки %s...", target_path.as_posix())
             shutil.rmtree(target_path)
@@ -122,7 +128,7 @@ class AbstractFileProcessor(ABC):
 
         sync_download_files(path=file_path, url=extended_object.primary_image)
         return True
-    
+
     def process_by_object_list(self, objects: list[MetObject]) -> List[Tuple[Path, Path]]:
         """Запускает процесс скачивания и получения информации об изображениях по списку"""
         self._clear_folder()
@@ -191,7 +197,7 @@ class AbstractAsyncFileProcessor(ABC):
         )
 
         return random_objects
-    
+
     async def _clear_folder(self):
         # Получаем абсолютные пути, чтобы раскрыть любые симлинки или "..", "."
         target_path = self.full_path.resolve()
@@ -248,7 +254,7 @@ class AbstractAsyncFileProcessor(ABC):
             client_session=self.client_session,
         )
         return True
-    
+
     async def _handle_one_element(
         self, index: int, obj: MetObject
     ) -> Tuple[Path, Path] | None:
@@ -283,7 +289,7 @@ class AbstractAsyncFileProcessor(ABC):
         ]
         results = await asyncio.gather(*list_coros)
         return [result for result in results if result is not None]
-    
+
     @async_time_meter_decorator
     async def start_pipeline(
         self,
@@ -297,4 +303,3 @@ class AbstractAsyncFileProcessor(ABC):
         random_objects = self.select_objects_sample(objects, count, classification)  # type: ignore
 
         return await self.process_by_object_list(random_objects)
-

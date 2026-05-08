@@ -55,6 +55,7 @@ async def concurency_pipeline(input: Path, output: Path):
         # При этом сам Event Loop не блокируется.
         await asyncio.gather(*processing_tasks)
 
+
 @time_meter_decorator
 def sync_pipeline(input: Path, output: Path):
     output_folder = output.name

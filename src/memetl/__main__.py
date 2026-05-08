@@ -54,10 +54,10 @@ def analyze_csv(version: Literal["old", "new"]):
 
 @time_meter_decorator
 def sync_pipeline_main(
-    file_path : str | Path,
+    file_path: str | Path,
     count: int,
     analyze_file: bool = True,
-    only_analize: bool = True
+    only_analize: bool = True,
 ):
     if isinstance(file_path, str):
         file_path = Path(file_path)
@@ -86,7 +86,7 @@ def sync_pipeline_main(
 
 @async_time_meter_decorator
 async def concurency_pipeline_main(
-    file_path : str | Path,
+    file_path: str | Path,
     count: int,
     analyze_file: bool = True,
     only_analize: bool = True,

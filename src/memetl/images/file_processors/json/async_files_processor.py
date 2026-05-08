@@ -47,4 +47,3 @@ class JSONAsyncFileProcessor(AbstractAsyncFileProcessor):
 
         log.info("Файл прочитан успешно.")
         return result
-

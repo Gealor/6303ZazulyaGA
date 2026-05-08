@@ -30,5 +30,3 @@ class JSONFileProcessor(AbstractFileProcessor):
                     raise IncorrectFormatJSONException from KeyError
         log.info("Файл прочитан успешно.")
         return result
-
-
