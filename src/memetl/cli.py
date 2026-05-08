@@ -19,6 +19,7 @@ from memetl.images.handlers import handle_one_image
 from memetl.images.integrations.async_integration import _save_metadata_in_file
 from memetl.logger import log
 
+
 @async_time_meter_decorator
 async def concurency_pipeline(input: Path, output: Path):
     log.info("=== Параллельная обработка данных ===")

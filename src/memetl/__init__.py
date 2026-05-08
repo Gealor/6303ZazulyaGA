@@ -9,5 +9,5 @@ __all__ = (
 
 
 from . import analysis, images
+from .__main__ import concurency_pipeline_main, sync_pipeline_main
 from .decorators import async_time_meter_decorator, time_meter_decorator
-from .main import concurency_pipeline_main, sync_pipeline_main

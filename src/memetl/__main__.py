@@ -1,3 +1,4 @@
+# файл __main__.py позволяет запускать модуль так python src/memetl ...
 import asyncio
 import random
 from concurrent.futures import ProcessPoolExecutor
