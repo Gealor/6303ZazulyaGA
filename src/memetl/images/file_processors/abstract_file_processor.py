@@ -1,8 +1,8 @@
 import asyncio
 import random
+import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-import shutil
 from typing import List, Tuple
 
 import aiofiles.os
@@ -13,13 +13,17 @@ import memetl.config as config
 from memetl.dataclass import BaseObject, MetObject
 from memetl.decorators import async_time_meter_decorator
 from memetl.images.integrations.async_integration import (
-    make_request_and_save_info,
     download_files as async_download_files,
+)
+from memetl.images.integrations.async_integration import (
+    make_request_and_save_info,
     semaphore_wrapper,
 )
 from memetl.images.integrations.integration import (
-    make_request,
     download_files as sync_download_files,
+)
+from memetl.images.integrations.integration import (
+    make_request,
 )
 from memetl.logger import log
 
