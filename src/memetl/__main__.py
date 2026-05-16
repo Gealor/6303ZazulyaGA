@@ -1,3 +1,4 @@
+# файл __main__.py позволяет запускать модуль так python src/memetl ...
 import asyncio
 import random
 from concurrent.futures import ProcessPoolExecutor
@@ -6,35 +7,39 @@ from typing import Literal
 
 import aiohttp
 
-from analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
-from argparser import prepare_argparser
-from core.artwork import ArtworkColorful, ArtworkGrayscale
-from core.file_processors import CSVAsyncFileProcessor, CSVFileProcessor
-from core.image_processors.image_processor import ImageProcessor
-from decorators import async_time_meter_decorator, time_meter_decorator
-from logger import log
+from memetl import config
+from memetl.analysis.pipeline import analyze_file, run_full_analysis, run_pipeline
+from memetl.argparser import prepare_argparser
+from memetl.decorators import async_time_meter_decorator, time_meter_decorator
+from memetl.images.artwork import ArtworkColorful, ArtworkGrayscale
+from memetl.images.file_processors import CSVAsyncFileProcessor, CSVFileProcessor
+from memetl.images.handlers import handle_one_image
+from memetl.images.image_processors.image_processor import ImageProcessor
+from memetl.logger import log
 
 random.seed(52)
+
 
 def _test_add(saved_file_path: Path, saved_file_dir: Path):
     artwork1 = ArtworkColorful(path=saved_file_path)
     log.info("Тест сложения с выделенными границами...")
-    artwork2 = ArtworkGrayscale(img = artwork1.handmade_highlight_borders())
+    artwork2 = ArtworkGrayscale(img=artwork1.handmade_highlight_borders())
     result = artwork1 + artwork2
-    result.save_image(path = saved_file_dir / "original_plus_highlight_borders.jpg")
+    result.save_image(path=saved_file_dir / "original_plus_highlight_borders.jpg")
 
     log.info("Тест сложения с размытием Гаусса...")
     artwork3 = ArtworkGrayscale(img=artwork1.handmade_gaussian_blur())
     result = artwork1 + artwork3
-    result.save_image(path = saved_file_dir / "original_plus_gaussian_blur.jpg")
+    result.save_image(path=saved_file_dir / "original_plus_gaussian_blur.jpg")
 
     log.info("Тест сложения grayscale изображения и выделенные границы")
     artwork_gray = ArtworkGrayscale(path=saved_file_path)
-    artwork_sobel = ArtworkGrayscale(img = artwork_gray.handmade_highlight_borders())
+    artwork_sobel = ArtworkGrayscale(img=artwork_gray.handmade_highlight_borders())
     result = artwork_gray + artwork_sobel
-    result.save_image(path = saved_file_dir / "grayscale_plus_highlight_borders.jpg")
+    result.save_image(path=saved_file_dir / "grayscale_plus_highlight_borders.jpg")
     result = artwork_sobel + artwork_gray
-    result.save_image(path = saved_file_dir / "highlight_borders_plus_grayscale.jpg")
+    result.save_image(path=saved_file_dir / "highlight_borders_plus_grayscale.jpg")
+
 
 @time_meter_decorator
 def analyze_csv(version: Literal["old", "new"]):
@@ -47,22 +52,16 @@ def analyze_csv(version: Literal["old", "new"]):
         run_full_analysis()
 
 
-def handle_one_image(file_path: Path, file_dir: Path):
-    '''
-    Функция обработчик одного изображения.
-    '''
-    file_name = file_path.stem
-    parts = file_name.split("_")
-    id_image = int(parts[0])
-    artwork = ArtworkColorful(path=file_path)
-    log.info("[%d] Получено изображение: %s", id_image, artwork)
-    image_processor = ImageProcessor(artwork=artwork, save_path=file_dir, id_image=id_image)
-    log.info("[%d] Начало обработки изображения %s...", id_image, file_path.stem)
-    image_processor.process_artwork()
-
-
 @time_meter_decorator
-def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool = True):
+def sync_pipeline_main(
+    file_path: str | Path,
+    count: int,
+    analyze_file: bool = True,
+    only_analize: bool = True,
+):
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
     if analyze_file:
         log.info("Начало аналитики...")
         analyze_csv("new")
@@ -73,7 +72,7 @@ def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool
     file_processor = CSVFileProcessor()
     log.info("=== Синхронная обработка данных ===")
     log.info("Начало подготовки данных...")
-    list_paths = file_processor.start_pipeline(count=count)
+    list_paths = file_processor.start_pipeline(read_file=file_path, count=count)
     if not list_paths:
         log.info("Нет данных для обработки.")
         return
@@ -84,8 +83,17 @@ def sync_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool
 
     # _test_add(saved_file_path, saved_file_dir)
 
+
 @async_time_meter_decorator
-async def concurency_pipeline_main(count: int, analyze_file: bool = True, only_analize: bool = True):
+async def concurency_pipeline_main(
+    file_path: str | Path,
+    count: int,
+    analyze_file: bool = True,
+    only_analize: bool = True,
+):
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
+
     if analyze_file:
         log.info("Начало аналитики...")
         analyze_csv("new")
@@ -97,7 +105,7 @@ async def concurency_pipeline_main(count: int, analyze_file: bool = True, only_a
     async with aiohttp.ClientSession() as session:
         file_processor = CSVAsyncFileProcessor(client_session=session)
         log.info("Начало подготовки данных...")
-        list_paths = await file_processor.start_pipeline(count=count)
+        list_paths = await file_processor.start_pipeline(read_file=file_path, count=count)
 
     if not list_paths:
         log.info("Нет данных для обработки.")
@@ -115,7 +123,7 @@ async def concurency_pipeline_main(count: int, analyze_file: bool = True, only_a
     # for p in tasks: # ждем завершения ВСЕХ процессов
     #     p.join()
 
-    log.info("Запуск пула процессов для обработки изображений...")
+    log.debug("Запуск пула процессов для обработки изображений...")
     loop = asyncio.get_running_loop()
 
     # Используем ProcessPoolExecutor, т.к по умолчанию использует количество ядер CPU, т.е. не будет проблем с OOM
@@ -135,7 +143,18 @@ if __name__ == "__main__":
     parser = prepare_argparser()
     args = parser.parse_args()
     if args.parallel:
-        asyncio.run(concurency_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze))
+        asyncio.run(
+            concurency_pipeline_main(
+                file_path=config.MET_OBJECTS_PATH,
+                count=args.count,
+                analyze_file=args.analyze_file,
+                only_analize=args.only_analyze,
+            )
+        )
     else:
-        sync_pipeline_main(count=args.count, analyze_file=args.analyze_file, only_analize=args.only_analyze)
-
+        sync_pipeline_main(
+            file_path=config.MET_OBJECTS_PATH,
+            count=args.count,
+            analyze_file=args.analyze_file,
+            only_analize=args.only_analyze,
+        )

@@ -8,18 +8,21 @@ from typing import Self
 import cv2
 import numpy as np
 
-import config
-from core.exceptions import (
+import memetl.config as config
+from memetl.decorators import time_meter_decorator
+from memetl.exceptions.images import (
     AddImagesException,
     ConstructorArtworkException,
     ShapeArtworkColorfulException,
 )
-from decorators import time_meter_decorator
-from logger import log
+from memetl.logger import log
 
 
 class Artwork(ABC):
-    __slots__ = ("_path_file", "_img",)
+    __slots__ = (
+        "_path_file",
+        "_img",
+    )
 
     def __init__(self, path: Path | None = None, img: np.ndarray | None = None):
         self._path_file = path
@@ -48,7 +51,7 @@ class Artwork(ABC):
             log.error("Не удалось загрузить изображение")
             raise ValueError
 
-        log.info("Форма изображения: %s", _img.shape)
+        log.debug("Форма изображения: %s", _img.shape)
         return _img
 
     @staticmethod
@@ -73,7 +76,9 @@ class Artwork(ABC):
 
     @staticmethod
     def _create_gaussian_kernel(
-        size: int, sigma: float | None = None, normalize: bool = True,
+        size: int,
+        sigma: float | None = None,
+        normalize: bool = True,
     ) -> np.ndarray:
         """Создать ядро Гаусса размерности size на size"""
         if size % 2 == 0:
@@ -108,7 +113,9 @@ class Artwork(ABC):
         pass
 
     @abstractmethod
-    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+    def handmade_histogram_equalization(
+        self, img: np.ndarray | None = None
+    ) -> np.ndarray:
         pass
 
     @abstractmethod
@@ -120,7 +127,9 @@ class Artwork(ABC):
         pass
 
     @time_meter_decorator
-    def handmade_convolution(self, kernel: np.ndarray, img: np.ndarray | None = None) -> np.ndarray:
+    def handmade_convolution(
+        self, kernel: np.ndarray, img: np.ndarray | None = None
+    ) -> np.ndarray:
         """
         Применений свертки к цветному изображению (размытие, резкость и т.д.)
         """
@@ -158,7 +167,9 @@ class Artwork(ABC):
 
     @time_meter_decorator
     def handmade_gaussian_blur(
-        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE, img: np.ndarray | None = None,
+        self,
+        kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
+        img: np.ndarray | None = None,
     ) -> np.ndarray:
         """Сглаживание Гаусса"""
         if img is None:
@@ -197,7 +208,9 @@ class Artwork(ABC):
         return np.clip(magnitude, 0, 255).astype(np.uint8)
 
     @time_meter_decorator
-    def handmade_gamma_correction(self, gamma: float, img: np.ndarray | None = None) -> np.ndarray:
+    def handmade_gamma_correction(
+        self, gamma: float, img: np.ndarray | None = None
+    ) -> np.ndarray:
         """
         Гамма-коррекция.
         Если гамма > 1, то изображение становится темнее
@@ -214,14 +227,16 @@ class Artwork(ABC):
 
     @time_meter_decorator
     def opencv_filter2D(
-        self, kernel: np.ndarray,
+        self,
+        kernel: np.ndarray,
     ) -> np.ndarray:
         # -1 значит, что глубина будет такой же, как и исходное изображение
         return cv2.filter2D(self._img, -1, kernel)
 
     @time_meter_decorator
     def opencv_gaussian_blur(
-        self, kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
+        self,
+        kernel_size: int = config.KERNEL_GAUSSIAN_SIZE,
     ) -> np.ndarray:
         # 0 значит, что степень размытия определяется ядром
         return cv2.GaussianBlur(self._img, (kernel_size, kernel_size), 0)
@@ -252,7 +267,7 @@ class Artwork(ABC):
 
     def __str__(self):
         h, w = self._img.shape[:2]
-        c = self._img.shape[2] if self._img.ndim==3 else 1
+        c = self._img.shape[2] if self._img.ndim == 3 else 1
         return f"{self.__class__.__name__}(h={h}, w={w}, c={c})"
 
     def __add__(self, other: Artwork | np.ndarray) -> Self:
@@ -302,7 +317,9 @@ class ArtworkColorful(Artwork):
         return gray.astype(np.uint8)
 
     @time_meter_decorator
-    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+    def handmade_histogram_equalization(
+        self, img: np.ndarray | None = None
+    ) -> np.ndarray:
         if img is None:
             img = self._img
 
@@ -346,7 +363,9 @@ class ArtworkGrayscale(Artwork):
         return self._img
 
     @time_meter_decorator
-    def handmade_histogram_equalization(self, img: np.ndarray | None = None) -> np.ndarray:
+    def handmade_histogram_equalization(
+        self, img: np.ndarray | None = None
+    ) -> np.ndarray:
         if img is None:
             img = self._img
 

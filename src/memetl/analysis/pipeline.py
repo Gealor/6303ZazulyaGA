@@ -4,10 +4,10 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from analysis.generators import process_chunks, read_chunks, summarize_chunks
-from analysis.visualize_and_plot import plot_graphs
-from config import MET_OBJECTS_PATH
-from logger import log
+from memetl.analysis.generators import process_chunks, read_chunks, summarize_chunks
+from memetl.analysis.visualize_and_plot import plot_graphs
+from memetl.config import ANALYSIS_RESULTS_PATH, MET_OBJECTS_PATH
+from memetl.logger import log
 
 
 def run_pipeline(
@@ -21,6 +21,7 @@ def run_pipeline(
     df_clean = pd.concat(processed, ignore_index=True)
     log.info("Обработка завершена. Получено %d записей.", len(df_clean))
     return df_clean
+
 
 # TODO: вынести это в генератор, обрабатывать чанками, вычисляем промежуточные значения и потом их суммируем к результирующему датафрейму
 # переименовать эту функцию в analyze_chunk, внутрь принимать результирующий датафрейм и чанк, для которого будем вычилсять статистику,
@@ -38,13 +39,17 @@ def analyze_file(
     # маскирование и получение тех материалов, которые достали выше
     df_top10 = df[df["Medium"].isin(top_10_mediums)]
 
-    stats_df = df_top10.groupby(["Medium"])["Duration"].aggregate(["mean", "std", "count"])
+    stats_df = df_top10.groupby(["Medium"])["Duration"].aggregate(
+        ["mean", "std", "count"]
+    )
 
     stats_df["CI_Margin"] = 1.96 * (stats_df["std"] / np.sqrt(stats_df["count"]))
     stats_df["Scatter_Margin"] = 1.96 * stats_df["std"]
 
     # График изменения времени со скользящим средним
-    max_duration_medium = stats_df["mean"].idxmax() # возвращается индекс материала (его название)
+    max_duration_medium = stats_df[
+        "mean"
+    ].idxmax()  # возвращается индекс материала (его название)
     log.info("Материал с наибольшим средним сроком: %s", max_duration_medium)
 
     df_max_med = df[df["Medium"] == max_duration_medium].copy()
@@ -55,18 +60,33 @@ def analyze_file(
 
     window_size = size_window if len(df_timeline) > size_window else len(df_timeline) // 2
 
-    df_timeline["Rolling_Mean"] = df_timeline["Duration"].rolling(window_size, min_periods=1).mean()
+    df_timeline["Rolling_Mean"] = (
+        df_timeline["Duration"].rolling(window_size, min_periods=1).mean()
+    )
 
-    plot_graphs(stats_df=stats_df, timeline_df=df_timeline, max_duration_medium=max_duration_medium)
+    plot_graphs(
+        stats_df=stats_df,
+        timeline_df=df_timeline,
+        max_duration_medium=max_duration_medium,
+    )
 
     return stats_df, df_timeline
 
 
 def run_full_analysis(
     file_path: Path | str = MET_OBJECTS_PATH,
+    output_folder: Path | str = ANALYSIS_RESULTS_PATH,
     top_n: int = 10,
-    size_window: int = 20
+    size_window: int = 20,
 ):
+    """Запуск пайплайна обработки MetObjects.csv файла.
+
+    Args:
+        file_path (Path | str, optional): Путь до MetObjects.csv, по умолчанию в папке data.
+        top_n (int, optional): Значение N для вывода Top-N элементов, по умолчанию 10.
+        size_window (int, optional): Размер окна для графика со скользящим средним, по умолчанию 20.
+    """
+
     log.info("Запуск пайплайна обработки...")
 
     raw_chunks = read_chunks(file_path)
@@ -85,14 +105,14 @@ def run_full_analysis(
     # Индексы будут Medium, т.к. n, mean и std - это pd.Series
     stats_df = pd.DataFrame(
         {
-            'mean': mean,
-            'std': std,
-            'count': n,
+            "mean": mean,
+            "std": std,
+            "count": n,
         }
     )
 
     # Топ-10
-    stats_df = stats_df.nlargest(top_n, 'count').copy()
+    stats_df = stats_df.nlargest(top_n, "count").copy()
     stats_df["CI_Margin"] = 1.96 * (stats_df["std"] / np.sqrt(stats_df["count"]))
     stats_df["Scatter_Margin"] = 1.96 * stats_df["std"]
 
@@ -103,10 +123,16 @@ def run_full_analysis(
     # Фильтр таймлайна только для лидера
     leader_timeline = df_timeline[df_timeline["Medium"] == max_duration_medium].copy()
 
-    leader_timeline["Duration"] = leader_timeline["sum_val"] / leader_timeline["count_val"]
+    leader_timeline["Duration"] = (
+        leader_timeline["sum_val"] / leader_timeline["count_val"]
+    )
     leader_timeline = leader_timeline.sort_values("Object End Date")
 
-    leader_timeline["Rolling_Mean"] = leader_timeline["Duration"].rolling(size_window, min_periods=1).mean()
-    plot_graphs(stats_df, leader_timeline, max_duration_medium)
-
-
+    leader_timeline["Rolling_Mean"] = (
+        leader_timeline["Duration"].rolling(size_window, min_periods=1).mean()
+    )
+    if isinstance(output_folder, str):
+        output_folder = Path(output_folder)
+    plot_graphs(
+        stats_df, leader_timeline, max_duration_medium, output_folder=output_folder
+    )

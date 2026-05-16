@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "memetl-zazulya6303"
+version = "0.2.2"
+description = "Metadata Extraction and Analysis Tool"
+requires-python = ">=3.10"
+dependencies = [
+    "requests",
+    "opencv-python",
+    "aiohttp",
+    "aiofiles",
+    "aioshutil",
+    "click",
+    "pandas",
+    "numpy",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "twine",
+    "build",
+    "ruff",
+    "flake8",
+    "flake8-builtins",
+    "flake8-bugbear",
+    "flake8-commas",
+    "flake8-eradicate",
+    "flake8-variables-names",
+    "pep8-naming",
+    "flake8-docstring-checker",
+    "flake8-annotations",
+    "flake8-nb",
+    "flake8-import-order",
+    "flake8-docstrings-complete",
+    "flake8-clean-block",
+]
+
+[project.scripts]
+memetl = "memetl.cli:memetl"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+
+[tool.setuptools.package-data]
+"*" = ["**/*.json", "**/*.csv"]
+
+[tool.ruff]
+line-length = 90
+
+[tool.ruff.lint]
+ignore = ["E203", "E266", "E501", "C408", "B010", "F401", "C901", "B008"]
+select = ["B", "C", "E", "F", "W", "B9", "I", "SIM"]
+
+[tool.flake8]
+max-line-length = 90
+exclude = [".git", "__pycache__", "docs", ".venv"]
+extend-ignore = ["D", "ANN", "VNE", "I", "W291", "W292", "W391", "E203", "E501"]
+
