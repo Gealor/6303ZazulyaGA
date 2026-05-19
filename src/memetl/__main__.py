@@ -145,7 +145,7 @@ if __name__ == "__main__":
     if args.parallel:
         asyncio.run(
             concurency_pipeline_main(
-                file_path=config.MET_OBJECTS_PATH,
+                file_path=args.csv_path,
                 count=args.count,
                 analyze_file=args.analyze_file,
                 only_analize=args.only_analyze,
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         )
     else:
         sync_pipeline_main(
-            file_path=config.MET_OBJECTS_PATH,
+            file_path=args.csv_path,
             count=args.count,
             analyze_file=args.analyze_file,
             only_analize=args.only_analyze,

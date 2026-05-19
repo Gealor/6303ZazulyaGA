@@ -1,4 +1,7 @@
 import argparse
+from pathlib import Path
+
+from memetl import config
 
 
 def prepare_argparser() -> argparse.ArgumentParser:
@@ -8,6 +11,12 @@ def prepare_argparser() -> argparse.ArgumentParser:
         type=int,
         default=1,
         help="Количество изображений для скачивания (по умолчанию: 1)",
+    )
+    parser.add_argument(
+        "--csv-path",
+        type=Path,
+        default=config.MET_OBJECTS_PATH,
+        help="Путь до MetObjects.csv",
     )
     parser.add_argument(
         "--parallel",
