@@ -42,14 +42,14 @@ def _test_add(saved_file_path: Path, saved_file_dir: Path):
 
 
 @time_meter_decorator
-def analyze_csv(version: Literal["old", "new"]):
+def analyze_csv(file_path: Path | str, version: Literal["old", "new"]):
     log.info("Запуск '%s' версии аналитики", version)
     if version == "old":
-        df_clean = run_pipeline()
+        df_clean = run_pipeline(file_path=file_path)
         stats_df, timeline_df = analyze_file(df_clean)
         # print(stats_df[:10])
     else:
-        run_full_analysis()
+        run_full_analysis(file_path=file_path)
 
 
 @time_meter_decorator
@@ -64,7 +64,7 @@ def sync_pipeline_main(
 
     if analyze_file:
         log.info("Начало аналитики...")
-        analyze_csv("new")
+        analyze_csv(file_path, "new")
         if only_analize:
             return
         log.info("Данные проанализированны.\n")
@@ -96,7 +96,7 @@ async def concurency_pipeline_main(
 
     if analyze_file:
         log.info("Начало аналитики...")
-        analyze_csv("new")
+        analyze_csv(file_path, "new")
         if only_analize:
             return
         log.info("Данные проанализированны.\n")

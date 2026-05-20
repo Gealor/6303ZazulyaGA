@@ -8,15 +8,14 @@ METADATA_FILE = "metadata.json"
 BAR_FIG_NAME = "столбчатая_диаграмма.png"
 SLIDE_WINDOW_NAME = "график_скользящее_окно.png"
 
-# Пути к пакету (для данных внутри пакета)
+# Базовые пути проекта
 BASE_DIR = Path(__file__).parent  # src/memetl
 PACKAGE_DIR = BASE_DIR.parent.parent  # папка проекта (где src/)
 
-# Пути к данным пакета (всегда доступны из пакета)
-MET_OBJECTS_PATH = PACKAGE_DIR / "data" / "MetObjects.csv"
 
-# Пути для сохранения результатов (в текущую рабочую директорию)
 WORK_DIR = Path.cwd()
+MET_OBJECTS_PATH = WORK_DIR / "data" / "MetObjects.csv"
+# Пути для сохранения результатов (в текущую рабочую директорию)
 PAINTINGS_DIR = WORK_DIR / "paintings"
 ANALYSIS_RESULTS_PATH = WORK_DIR / "analysis_results"
 LOG_DIR_PATH = WORK_DIR / "logs"
